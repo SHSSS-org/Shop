@@ -92,6 +92,7 @@
       if(section==='admin') document.getElementById("adminSection").style.display="block";
     }
 
+    // Fetch and display approved products
     async function fetchProducts(){
       try{
         const res = await fetch(`${API_BASE}/products`);
@@ -99,6 +100,7 @@
         const container = document.getElementById("products");
         container.innerHTML="";
         products.forEach(p=>{
+          // Only show approved products
           const div = document.createElement("div");
           div.className="product";
           div.innerHTML=`
@@ -118,7 +120,7 @@
       } catch(e){ console.error("Error fetching products:", e);}
     }
 
-    // Submit Product
+    // Submit product form
     document.getElementById("submitForm").addEventListener("submit", async e=>{
       e.preventDefault();
       const data = {
@@ -128,7 +130,7 @@
         product: document.getElementById("productName").value,
         condition: document.getElementById("condition").value,
         room: document.getElementById("room").value,
-        price: document.getElementById("price").value,
+        price: parseFloat(document.getElementById("price").value),
         year: document.getElementById("year").value,
         image: document.getElementById("image").value,
         description: document.getElementById("description").value
@@ -145,7 +147,7 @@
       } catch(err){ console.error(err); alert("Error submitting product"); }
     });
 
-    // Admin Login
+    // Admin login
     document.getElementById("adminLoginForm").addEventListener("submit", async e=>{
       e.preventDefault();
       try{
@@ -166,6 +168,7 @@
       } catch(err){ console.error(err); }
     });
 
+    // Load admin dashboard
     async function loadAdminAds(){
       const res = await fetch(`${API_BASE}/admin/products`);
       const data = await res.json();
@@ -182,21 +185,21 @@
           buttons.push(`<button onclick="approveAd(${p.id})" class="btn">Approve</button>`);
           buttons.push(`<button onclick="rejectAd(${p.id})" class="btn">Reject</button>`);
         }
-        // Admin can delete any ad (pending or approved)
         buttons.push(`<button onclick="deleteAd(${p.id})" class="btn">Delete</button>`);
-
         div.innerHTML = `<h4>${p.product} - ₹${p.price}</h4>${buttons.join(" ")}`;
         if(p.status==="pending") pending.appendChild(div);
         else approved.appendChild(div);
       });
     }
 
-    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST"}); loadAdminAds(); }
-    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST"}); loadAdminAds(); }
-    async function deleteAd(id){
-      if(!confirm("Are you sure you want to delete this product?")) return;
-      await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"});
-      loadAdminAds();
+    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST"}); loadAdminAds(); fetchProducts(); }
+    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST"}); loadAdminAds(); fetchProducts(); }
+    async function deleteAd(id){ 
+      if(confirm("Are you sure you want to delete this product?")){
+        await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"});
+        loadAdminAds(); 
+        fetchProducts(); 
+      }
     }
 
     window.onload = fetchProducts;
