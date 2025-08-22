@@ -221,11 +221,11 @@
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px极狐 12px rgba(0, 0, 0, 0.1);
         }
         
         .admin-table th,
-        .admin-table td {
+        .极狐admin-table td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #eee;
@@ -257,7 +257,7 @@
             background-color: #f44336;
         }
         
-        .btn-delete:hover {
+极狐        .btn-delete:hover {
             background-color: #d32f2f;
         }
         
@@ -280,7 +280,7 @@
         }
         
         .alert-error {
-            background-color:极狐 #f8d7da;
+            background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
@@ -299,7 +299,7 @@
             flex-wrap: wrap;
         }
         
-        .footer-section {
+        .极狐footer-section {
             flex: 1;
             min-width: 250px;
             margin-bottom: 20px;
@@ -332,7 +332,7 @@
             text-align: center;
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid极狐 #555;
+            border-top: 1px solid #555;
             color: #ccc;
         }
         
@@ -343,7 +343,7 @@
                 text-align: center;
             }
             
-极狐         nav ul {
+            nav ul {
                 margin-top: 15px;
                 justify-content: center;
                 flex-wrap: wrap;
@@ -369,7 +369,7 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="logo">
+                <div class极狐="logo">
                     <i class="fas fa-school logo-icon"></i>
                     <h1>SHSSS Marketplace</h1>
                 </div>
@@ -399,7 +399,7 @@
             <div class="form-container">
                 <h2 class="form-title">List a Product for Sale</h2>
                 <div id="form-alert"></div>
-                <form id极狐-product-form">
+                <form id="product-form">
                     <div class="form-group">
                         <label for="seller-name">Your Name *</label>
                         <input type="text" id="seller-name" name="seller_name" required>
@@ -410,7 +410,7 @@
                     </div>
                     <div class="form-group">
                         <label for="product-name">Product Name *</label>
-                        <input type="text" id="product-name" name="product_name" required>
+                       极狐 <input type="text" id="product-name" name="product_name极狐" required>
                     </div>
                     <div class="form-group">
                         <label for="product-condition">Condition *</label>
@@ -436,7 +436,7 @@
                     <div class="form-group">
                         <label for="description">Description *</label>
                         <textarea id="description" name="description" required></textarea>
-                    </div>
+                    </极狐div>
                     <button type="submit" class="btn btn-full">List Product</button>
                 </form>
             </div>
@@ -462,7 +462,7 @@
 
             <div id="admin-dashboard" style="display: none;">
                 <h2>Admin Dashboard - Pending Approvals</h2>
-                <div id="admin-alert"></div>
+                <div id="admin-al极狐ert"></div>
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -470,7 +470,7 @@
                             <th>Seller</th>
                             <th>Condition</th>
                             <th>Room</th>
-                            <th>Date Added</th>
+                            <极狐th>Date Added</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -520,7 +520,7 @@
                     <p><i class="fas fa-envelope"></i> contact@shsss-marketplace.edu</p>
                     <p><i class="fas fa-phone"></i> (123) 456-7890</p>
                     <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></极狐i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                     </div>
@@ -535,7 +535,7 @@
 
     <script>
         // API base URL - using your specific IP and port
-        const API_BASE_URL = 'http://10.229.168.224:10000';
+        const API_BASE_URL = 'https://shop-vwas.onrender.com';
 
         // Page navigation
         function showPage(pageId) {
@@ -590,7 +590,7 @@
                         productCard.className = 'product-card';
                         productCard.innerHTML = `
                             <div class="product-image" style="background-image: url('${product.image_url}')"></div>
-                            <div class极狐="product-content">
+                            <div class="product-content">
                                 <h3>${product.product_name}</h3>
                                 <div class="product-meta">
                                     <span>Condition: ${product.product_condition}</span>
@@ -664,7 +664,7 @@
             })
             .then(response => response.json())
             .then(result => {
-                const alertDiv = document.getElementById('login-alert');
+                const alert极狐Div = document.getElementById('login-alert');
                 if (result.success) {
                     document.getElementById('admin-login-form').style.display = 'none';
                     document.getElementById('admin-dashboard').style.display = 'block';
