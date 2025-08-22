@@ -1,276 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHSSS Marketplace</title>
-<style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
-header { background:#007bff; color:#fff; padding:1rem; text-align:center; }
-.container { max-width:1200px; margin:20px auto; padding:0 1rem; }
-h2 { color:#333; margin-bottom:1rem; }
-.product { background:#fff; padding:1rem; margin-bottom:1rem; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; gap:1rem; }
-.product img { width:150px; height:150px; object-fit:cover; border-radius:8px; }
-.product-details { flex:1; }
-form { background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-bottom:2rem; }
-input, select, textarea, button { display:block; width:100%; margin-bottom:0.5rem; padding:0.5rem; font-size:1rem; }
-button { background:#007bff; color:#fff; border:none; cursor:pointer; border-radius:5px; }
-button:hover { background:#0056b3; }
-button.red { background:red; }
-.error { color:red; font-weight:bold; }
-.success { color:green; font-weight:bold; }
-nav { display:flex; gap:1rem; margin-bottom:1rem; }
-nav button { flex:1; }
-section { display:none; }
-section.active { display:block; }
-.admin-section { margin-top:2rem; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHSSS Marketplace</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+    header { background:#007bff; color:#fff; padding:1rem; text-align:center; }
+    .container { max-width:900px; margin:2rem auto; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    .product { border:1px solid #ddd; padding:1rem; margin:1rem 0; border-radius:6px; background:#fafafa; }
+    .product img { max-width:150px; display:block; margin-bottom:0.5rem; }
+    .btn { background:#007bff; color:#fff; padding:0.5rem 1rem; border:none; border-radius:4px; cursor:pointer; }
+    .btn:hover { background:#0056b3; }
+    nav { text-align:center; margin:1rem; }
+    nav button { margin:0 5px; }
+    /* Modal */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+    .modal-content { background:#fff; margin:5% auto; padding:20px; width:90%; max-width:400px; border-radius:8px; }
+    .close { float:right; font-size:1.5rem; cursor:pointer; }
+    input, textarea { width:100%; padding:0.5rem; margin:0.5rem 0; border:1px solid #ccc; border-radius:4px; }
+    #adminSection, #submitSection { display:none; }
+  </style>
 </head>
 <body>
-
-<header>
+  <header>
     <h1>SHSSS Marketplace</h1>
-</header>
+  </header>
+  <nav>
+    <button onclick="showSection('market')">Marketplace</button>
+    <button onclick="showSection('submit')">Submit Ad</button>
+    <button onclick="showSection('admin')">Admin</button>
+  </nav>
 
-<div class="container">
+  <div class="container" id="marketSection">
+    <h2>Available Products</h2>
+    <div id="products"></div>
+  </div>
 
-    <nav>
-        <button onclick="showSection('browse')">Browse Products</button>
-        <button onclick="showSection('submit')">Submit Product</button>
-        <button onclick="showSection('admin-login')">Admin</button>
-    </nav>
+  <div class="container" id="submitSection">
+    <h2>Submit New Product</h2>
+    <form id="submitForm">
+      <input type="text" id="name" placeholder="Your Name" required>
+      <input type="text" id="phone" placeholder="Phone (10 digits)" pattern="^[0-9]{10}$" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="productName" placeholder="Product Name" required>
+      <input type="text" id="condition" placeholder="Condition (New, Slightly used...)" required>
+      <input type="text" id="room" placeholder="Room Number" required>
+      <input type="number" id="price" placeholder="Price" required>
+      <input type="text" id="year" placeholder="Year of Buy (optional)">
+      <input type="text" id="image" placeholder="Image URL" required>
+      <textarea id="description" placeholder="Description"></textarea>
+      <button type="submit" class="btn">Submit</button>
+    </form>
+  </div>
 
-    <!-- Browse Products -->
-    <section id="browse" class="active">
-        <h2>Available Products</h2>
-        <div id="products-list">Loading...</div>
-    </section>
+  <div class="container" id="adminSection">
+    <h2>Admin Login</h2>
+    <form id="adminLoginForm">
+      <input type="text" id="adminUser" placeholder="Username" required>
+      <input type="password" id="adminPass" placeholder="Password" required>
+      <button type="submit" class="btn">Login</button>
+    </form>
+    <div id="adminDashboard" style="display:none;">
+      <h3>Pending Ads</h3>
+      <div id="pendingAds"></div>
+      <h3>Approved Ads</h3>
+      <div id="approvedAds"></div>
+    </div>
+  </div>
 
-    <!-- Product Submission Form -->
-    <section id="submit">
-        <h2>Submit a Product</h2>
-        <form id="submit-form">
-            <input type="text" name="seller_name" placeholder="Your Name" required>
-            <input type="email" name="seller_email" placeholder="Your Email" required>
-            <input type="text" name="product_name" placeholder="Product Name" required>
-            <select name="product_condition" required>
-                <option value="">Select Condition</option>
-                <option value="New">New</option>
-                <option value="Slightly Used">Slightly Used</option>
-                <option value="Heavily Used">Heavily Used</option>
-            </select>
-            <input type="text" name="room_number" placeholder="Room Number" required>
-            <input type="number" name="year_bought" placeholder="Year Bought (optional)">
-            <input type="text" name="image_url" placeholder="Google Drive Image Link" required>
-            <textarea name="description" placeholder="Product Description" rows="4" required></textarea>
-            <button type="submit">Submit Product</button>
-            <div id="submit-msg"></div>
-        </form>
-    </section>
+  <!-- Buy Modal -->
+  <div id="buyModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Buy Product</h3>
+      <form id="buyForm">
+        <input type="hidden" id="buyProductId">
+        <input type="text" id="buyerName" placeholder="Your Name" required>
+        <input type="text" id="buyerRoom" placeholder="Room No" required>
+        <input type="text" id="buyerContact" placeholder="Contact" pattern="^[0-9]{10}$" required>
+        <input type="email" id="buyerEmail" placeholder="Email" required>
+        <button type="submit" class="btn">Submit</button>
+      </form>
+    </div>
+  </div>
 
-    <!-- Admin Login -->
-    <section id="admin-login">
-        <h2>Admin Login</h2>
-        <form id="admin-login-form">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-            <div id="admin-msg"></div>
-        </form>
-    </section>
+  <script>
+    const API_BASE = "https://shop-fq1v.onrender.com/api";
+    let adminToken = null;
 
-    <!-- Admin Dashboard -->
-    <section id="admin-dashboard" class="admin-section">
-        <h2>Admin Dashboard</h2>
-        <button id="logout-admin" class="red">Logout</button>
-        <div id="pending-products">Loading...</div>
-    </section>
+    function showSection(section) {
+      document.getElementById("marketSection").style.display = "none";
+      document.getElementById("submitSection").style.display = "none";
+      document.getElementById("adminSection").style.display = "none";
+      if(section === "market") document.getElementById("marketSection").style.display = "block";
+      if(section === "submit") document.getElementById("submitSection").style.display = "block";
+      if(section === "admin") document.getElementById("adminSection").style.display = "block";
+    }
 
-</div>
-
-<script>
-const API_BASE = "https://shop-y2ev.onrender.com/api";
-let adminToken = localStorage.getItem("admin_token") || null;
-
-function showSection(id){
-    document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-    if(id === 'browse') loadProducts();
-    if(id === 'admin-dashboard') loadPendingProducts();
-}
-
-// Load approved products
-async function loadProducts() {
-    const list = document.getElementById("products-list");
-    list.innerHTML = "Loading...";
-    try {
+    async function fetchProducts() {
+      try {
         const res = await fetch(`${API_BASE}/products`);
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("Invalid response");
-        if(data.length === 0) list.innerHTML = "<p>No products yet.</p>";
-        else list.innerHTML = data.map(p => `
-            <div class="product">
-                <img src="${p.image_url}" alt="${p.product_name}">
-                <div class="product-details">
-                    <h3>${p.product_name}</h3>
-                    <p><strong>Condition:</strong> ${p.product_condition}</p>
-                    <p><strong>Seller:</strong> ${p.seller_name} (${p.seller_email})</p>
-                    <p><strong>Room:</strong> ${p.room_number}</p>
-                    <p><strong>Year:</strong> ${p.year_bought || "N/A"}</p>
-                    <p>${p.description}</p>
-                </div>
-            </div>
-        `).join("");
-    } catch(e) {
-        list.innerHTML = `<p class="error">Failed to load products: ${e.message}</p>`;
-    }
-}
-
-// Submit product
-document.getElementById("submit-form").addEventListener("submit", async e => {
-    e.preventDefault();
-    const msg = document.getElementById("submit-msg");
-    msg.textContent = "";
-    const form = e.target;
-    const data = Object.fromEntries(new FormData(form).entries());
-    if(!data.year_bought) data.year_bought = null;
-
-    try {
-        const res = await fetch(`${API_BASE}/products`, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(result.success){
-            msg.textContent = result.message;
-            msg.className = "success";
-            form.reset();
-        } else {
-            msg.textContent = result.message;
-            msg.className = "error";
-        }
-    } catch(err){
-        msg.textContent = "Network error";
-        msg.className = "error";
-    }
-});
-
-// Admin login
-document.getElementById("admin-login-form").addEventListener("submit", async e=>{
-    e.preventDefault();
-    const msg = document.getElementById("admin-msg");
-    msg.textContent = "";
-    const data = Object.fromEntries(new FormData(e.target).entries());
-
-    try {
-        const res = await fetch(`${API_BASE}/admin/login`, {
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(result.success){
-            adminToken = result.token;
-            localStorage.setItem("admin_token", adminToken);
-            msg.textContent = "Login successful!";
-            msg.className = "success";
-            e.target.style.display="none";
-            document.getElementById("admin-dashboard").style.display="block";
-            showSection("admin-dashboard");
-        } else {
-            msg.textContent = result.message;
-            msg.className = "error";
-        }
-    } catch(err){
-        msg.textContent = "Network error";
-        msg.className = "error";
-    }
-});
-
-// Admin logout
-document.getElementById("logout-admin").addEventListener("click", ()=>{
-    adminToken=null;
-    localStorage.removeItem("admin_token");
-    document.getElementById("admin-dashboard").style.display="none";
-    document.getElementById("admin-login-form").style.display="block";
-    showSection("admin-login");
-});
-
-// Load pending products for admin
-async function loadPendingProducts(){
-    if(!adminToken) return;
-    const container = document.getElementById("pending-products");
-    container.innerHTML = "Loading...";
-    try{
-        const res = await fetch(`${API_BASE}/admin/products?status=pending`, {
-            headers:{"Authorization":"Bearer "+adminToken}
-        });
         const products = await res.json();
-        if(!Array.isArray(products) || products.length===0){
-            container.innerHTML = "<p>No pending submissions.</p>";
-            return;
-        }
-        container.innerHTML = products.map(p=>`
-            <div class="product">
-                <img src="${p.image_url}" alt="${p.product_name}">
-                <div class="product-details">
-                    <h3>${p.product_name}</h3>
-                    <p><strong>Seller:</strong> ${p.seller_name} (${p.seller_email})</p>
-                    <p><strong>Room:</strong> ${p.room_number}</p>
-                    <p><strong>Condition:</strong> ${p.product_condition}</p>
-                    <p>${p.description}</p>
-                    <button onclick="updateProduct(${p.id},'approved')">Approve</button>
-                    <button class="red" onclick="deleteProduct(${p.id})">Delete</button>
-                </div>
-            </div>
-        `).join("");
-    } catch(e){
-        container.innerHTML = `<p class="error">Failed to load pending products: ${e.message}</p>`;
-    }
-}
-
-// Approve product
-async function updateProduct(id,status){
-    try{
-        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
-            method:"PUT",
-            headers:{"Content-Type":"application/json","Authorization":"Bearer "+adminToken},
-            body: JSON.stringify({status})
+        const container = document.getElementById("products");
+        container.innerHTML = "";
+        products.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "product";
+          div.innerHTML = `
+            <img src="${p.image}" alt="Product">
+            <h3>${p.name} - ₹${p.price}</h3>
+            <p><b>Condition:</b> ${p.condition}</p>
+            <p><b>Room No:</b> ${p.room_no}</p>
+            <p><b>Seller:</b> ${p.seller || "N/A"}</p>
+            <p><b>Year of Buy:</b> ${p.year || "N/A"}</p>
+            <p><b>Email:</b> ${p.email}</p>
+            <p>${p.description}</p>
+            <button class="btn" onclick="openBuyModal(${p.id})">Buy</button>
+          `;
+          container.appendChild(div);
         });
-        const result = await res.json();
-        alert(result.message);
-        loadPendingProducts();
-        loadProducts();
-    } catch(err){
-        alert("Error updating product");
+      } catch (e) {
+        console.error("Error fetching products:", e);
+      }
     }
-}
 
-// Delete product
-async function deleteProduct(id){
-    if(!confirm("Are you sure you want to delete this product?")) return;
-    try{
-        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
-            method:"DELETE",
-            headers:{"Authorization":"Bearer "+adminToken}
+    // Submit Product
+    document.getElementById("submitForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        product: document.getElementById("productName").value,
+        condition: document.getElementById("condition").value,
+        room_no: document.getElementById("room").value,
+        price: document.getElementById("price").value,
+        year: document.getElementById("year").value,
+        image: document.getElementById("image").value,
+        description: document.getElementById("description").value
+      };
+      try {
+        const res = await fetch(`${API_BASE}/submit`, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(data)
         });
-        const result = await res.json();
-        alert(result.message);
-        loadPendingProducts();
-    } catch(err){
-        alert("Error deleting product");
+        if(res.ok){ alert("Product submitted for approval!"); e.target.reset(); }
+        else alert("Failed to submit product");
+      } catch (err) { console.error(err); }
+    });
+
+    // Buy Product
+    function openBuyModal(productId) {
+      document.getElementById("buyProductId").value = productId;
+      document.getElementById("buyModal").style.display = "block";
     }
-}
+    function closeModal() { document.getElementById("buyModal").style.display = "none"; }
+    document.getElementById("buyForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const data = {
+        product_id: document.getElementById("buyProductId").value,
+        name: document.getElementById("buyerName").value,
+        room: document.getElementById("buyerRoom").value,
+        contact: document.getElementById("buyerContact").value,
+        email: document.getElementById("buyerEmail").value
+      };
+      try {
+        const res = await fetch(`${API_BASE}/buy`, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(data)
+        });
+        if(res.ok){ alert("Your request has been sent!"); closeModal(); }
+        else alert("Failed to send request");
+      } catch (err) { console.error(err); }
+    });
 
-// Initial load
-loadProducts();
-if(adminToken) {
-    document.getElementById("admin-login-form").style.display="none";
-    document.getElementById("admin-dashboard").style.display="block";
-    loadPendingProducts();
-}
-</script>
+    // Admin Login
+    document.getElementById("adminLoginForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      try {
+        const res = await fetch(`${API_BASE}/admin/login`, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            username: document.getElementById("adminUser").value,
+            password: document.getElementById("adminPass").value
+          })
+        });
+        if(res.ok){
+          const data = await res.json();
+          adminToken = data.token;
+          document.getElementById("adminLoginForm").style.display = "none";
+          document.getElementById("adminDashboard").style.display = "block";
+          loadAdminAds();
+        } else alert("Invalid login");
+      } catch (err){ console.error(err); }
+    });
 
+    async function loadAdminAds(){
+      const res = await fetch(`${API_BASE}/admin/ads`, { headers:{Authorization: "Bearer " + adminToken} });
+      const data = await res.json();
+      document.getElementById("pendingAds").innerHTML = "";
+      document.getElementById("approvedAds").innerHTML = "";
+      data.pending.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `<h4>${p.name} - ₹${p.price}</h4>
+        <button onclick="approveAd(${p.id})">Approve</button>
+        <button onclick="rejectAd(${p.id})">Reject</button>
+        <button onclick="deleteAd(${p.id})">Delete</button>`;
+        document.getElementById("pendingAds").appendChild(div);
+      });
+      data.approved.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `<h4>${p.name} - ₹${p.price}</h4>
+        <button onclick="deleteAd(${p.id})">Delete</button>`;
+        document.getElementById("approvedAds").appendChild(div);
+      });
+    }
+
+    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
+    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
+    async function deleteAd(id){ await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
+
+    window.onload = fetchProducts;
+  </script>
 </body>
 </html>
