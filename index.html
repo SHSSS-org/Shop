@@ -1,1 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHSSS Headlines - Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: #f7f7f7;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: #ff385c;
+            margin-left: 10px;
+        }
+        
+        .logo-icon {
+            color: #ff385c;
+            font-size: 28px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+            position: relative;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        nav ul li a i {
+            margin-right: 5px;
+        }
+        
+        nav ul li a:hover {
+            color: #ff385c;
+        }
+        
+        /* Page Navigation */
+        .page-nav {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .page-nav a {
+            margin: 0 10px;
+            padding: 10px 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .page-nav a:hover, .page-nav a.active {
+            background-color: #ff385c;
+            color: #fff;
+        }
+        
+        /* Items Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .item-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .item-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .item-condition {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .condition-new {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .condition-slightly-used {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .condition-heavily-used {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .item-content {
+            padding: 20px;
+        }
+        
+        .item-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .item-details {
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .item-details span {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .item-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .item-contact {
+            display: inline-block;
+            background-color: #ff385c;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        
+        .item-contact:hover {
+            background-color: #e61e4d;
+        }
+        
+        /* Form Styles */
+        .form-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff385c;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            display: block;
+            width: 100%;
+            background-color: #ff385c;
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #e61e4d;
+        }
+        
+        /* Admin Styles */
+        .admin-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff385c;
+            text-align: center;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .admin-table th {
+            background-color: #f7f7f7;
+            font-weight: 500;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .admin-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-approve {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .btn-edit {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 40px 0;
+            margin-top: 40px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #ff385c;
+        }
+        
+        .footer-section p, .footer-section a {
+            color: #ccc;
+            margin-bottom: 10px;
+            display: block;
+            text-decoration: none;
+        }
+        
+        .footer-section a:hover {
+            color: #ff385c;
+        }
+        
+        .social-icons a {
+            display: inline-block;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #555;
+            color: #ccc;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            nav ul li {
+                margin: 5px 10px;
+            }
+            
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-school logo-icon"></i>
+                    <h1>SHSSS Headlines</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="#"><i class="fas fa-store"></i> Marketplace</a></li>
+                        <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
 
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Navigation -->
+        <div class="page-nav">
+            <a href="#" class="active" id="nav-marketplace">Marketplace</a>
+            <a href="#" id="nav-list-item">List an Item</a>
+            <a href="#" id="nav-admin">Admin</a>
+        </div>
+
+        <!-- Marketplace Section -->
+        <section id="marketplace-section">
+            <h2 style="text-align: center; font-size: 32px; color: #ff385c; margin: 20px 0;">Items for Sale</h2>
+            
+            <div class="items-grid" id="items-container">
+                <!-- Items will be loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- List Item Section -->
+        <section id="list-item-section" class="hidden">
+            <div class="form-container">
+                <h2 class="form-title">List an Item for Sale</h2>
+                <form id="item-form">
+                    <div class="form-group">
+                        <label for="seller-name">Your Name *</label>
+                        <input type="text" id="seller-name" name="seller_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="seller-email">Email Address *</label>
+                        <input type="email" id="seller-email" name="seller_email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="seller-phone">Phone Number *</label>
+                        <input type="tel" id="seller-phone" name="seller_phone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="room-number">Room Number *</label>
+                        <input type="text" id="room-number" name="room_number" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-name">Product Name *</label>
+                        <input type="text" id="product-name" name="product_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-condition">Condition *</label>
+                        <select id="product-condition" name="product_condition" required>
+                            <option value="">Select Condition</option>
+                            <option value="new">New</option>
+                            <option value="slightly-used">Slightly Used</option>
+                            <option value="heavily-used">Heavily Used</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year-bought">Year Bought (Optional)</label>
+                        <input type="number" id="year-bought" name="year_bought" min="2000" max="2025">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="image-link">Google Drive Image Link *</label>
+                        <input type="url" id="image-link" name="image_link" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-description">Description *</label>
+                        <textarea id="product-description" name="product_description" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Item for Approval</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Admin Section -->
+        <section id="admin-section" class="hidden">
+            <div class="admin-panel">
+                <h2 class="admin-title">Admin Approval Panel</h2>
+                
+                <div id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="admin-username">Username</label>
+                        <input type="text" id="admin-username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="admin-password">Password</label>
+                        <input type="password" id="admin-password" required>
+                    </div>
+                    
+                    <button id="admin-login" class="submit-btn">Login</button>
+                </div>
+                
+                <div id="admin-content" class="hidden">
+                    <h3>Pending Approvals</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Seller</th>
+                                <th>Room</th>
+                                <th>Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-items">
+                            <!-- Pending items will be loaded here -->
+                        </tbody>
+                    </table>
+                    
+                    <h3>Published Items</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Seller</th>
+                                <th>Room</th>
+                                <th>Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="published-items">
+                            <!-- Published items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SHSSS Headlines</h3>
+                    <p>Connecting boarding house students for academic success and community building.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="#"><i class="fas fa-home"></i> Home</a>
+                    <a href="#"><i class="fas fa-store"></i> Marketplace</a>
+                    <a href="#"><i class="fas fa-info-circle"></i> About Us</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-envelope"></i> contact@shsss-headlines.edu</p>
+                    <p><i class="fas fa-phone"></i> (123) 456-7890</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 SHSSS Headlines. All rights reserved.</p>
+                <p>This website is powered by Flovvnetic [Ai powered Web Development Agency] JN</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample data for demonstration
+        const sampleItems = [
+            {
+                id: 1,
+                product_name: "Calculus Textbook",
+                product_condition: "slightly-used",
+                room_number: "204",
+                seller_name: "John Smith",
+                year_bought: 2023,
+                seller_email: "john@example.com",
+                image_link: "https://drive.google.com/thumbnail?id=1DxkbGX6WREYQ8c8Nc_5vCjMvR9o9XyYf",
+                description: "Hardly used calculus textbook from last semester. No highlights or writings inside."
+            },
+            {
+                id: 2,
+                product_name: "Scientific Calculator",
+                product_condition: "heavily-used",
+                room_number: "312",
+                seller_name: "Emma Johnson",
+                year_bought: 2021,
+                seller_email: "emma@example.com",
+                image_link: "https://drive.google.com/thumbnail?id=1PcdmzLbJqWQkGfW9rTtKvXxY7sV2hZNu",
+                description: "TI-84 calculator. Works perfectly but has some scratches on the screen."
+            },
+            {
+                id: 3,
+                product_name: "Desk Lamp",
+                product_condition: "new",
+                room_number: "118",
+                seller_name: "Michael Chen",
+                year_bought: 2024,
+                seller_email: "michael@example.com",
+                image_link: "https://drive.google.com/thumbnail?id=1LmRnKcTfYwSqUdVvXpZsNcQrWt8bBjMe",
+                description: "Brand new LED desk lamp with adjustable brightness. Still in original packaging."
+            }
+        ];
+
+         // DOM elements
+        const navMarketplace = document.getElementById('nav-marketplace');
+        const navListItem = document.getElementById('nav-list-item');
+        const navAdmin = document.getElementById('nav-admin');
+        
+        const marketplaceSection = document.getElementById('marketplace-section');
+        const listItemSection = document.getElementById('list-item-section');
+        const adminSection = document.getElementById('admin-section');
+        
+        const itemsContainer = document.getElementById('items-container');
+        const itemForm = document.getElementById('item-form');
+        
+        const loginForm = document.getElementById('login-form');
+        const adminContent = document.getElementById('admin-content');
+        const adminLoginBtn = document.getElementById('admin-login');
+        
+        // Navigation handlers
+        navMarketplace.addEventListener('click', (e) => {
+            e.preventDefault();
+            setActiveSection('marketplace');
+        });
+        
+        navListItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            setActiveSection('list-item');
+        });
+        
+        navAdmin.addEventListener('click', (e) => {
+            e.preventDefault();
+            setActiveSection('admin');
+        });
+        
+        // Admin login handler
+        adminLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            // Simple authentication (in real app, this would be server-side)
+            if (username === 'admin' && password === 'password') {
+                loginForm.classList.add('hidden');
+                adminContent.classList.remove('hidden');
+            } else {
+                alert('Invalid credentials. Try admin/password for demo.');
+            }
+        });
+        
+        // Form submission handler
+        itemForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // In a real application, this would send data to the server
+            alert('Item submitted for approval! In a real application, this would be sent to the server.');
+            itemForm.reset();
+        });
+        
+        // Function to set active section
+        function setActiveSection(section) {
+            // Reset all nav items
+            navMarketplace.classList.remove('active');
+            navListItem.classList.remove('active');
+            navAdmin.classList.remove('active');
+            
+            // Hide all sections
+            marketplaceSection.classList.add('hidden');
+            listItemSection.classList.add('hidden');
+            adminSection.classList.add('hidden');
+            
+            // Show selected section and set active nav
+            if (section === 'marketplace') {
+                marketplaceSection.classList.remove('hidden');
+                navMarketplace.classList.add('active');
+                loadMarketplaceItems();
+            } else if (section === 'list-item') {
+                listItemSection.classList.remove('hidden');
+                navListItem.classList.add('active');
+            } else if (section === 'admin') {
+                adminSection.classList.remove('hidden');
+                navAdmin.classList.add('active');
+            }
+        }
+        
+        // Function to load marketplace items
+        function loadMarketplaceItems() {
+            itemsContainer.innerHTML = '';
+            
+            sampleItems.forEach(item => {
+                const conditionClass = `condition-${item.product_condition}`;
+                const conditionText = getConditionText(item.product_condition);
+                
+                const itemCard = document.createElement('div');
+                itemCard.className = 'item-card';
+                itemCard.innerHTML = `
+                    <div class="item-image" style="background-image: url('${item.image_link}')">
+                        <span class="item-condition ${conditionClass}">${conditionText}</span>
+                    </div>
+                    <div class="item-content">
+                        <h3 class="item-title">${item.product_name}</h3>
+                        <div class="item-details">
+                            <span>Seller:</span> ${item.seller_name} (Room ${item.room_number})
+                        </div>
+                        ${item.year_bought ? `<div class="item-details"><span>Year Bought:</span> ${item.year_bought}</div>` : ''}
+                        <p class="item-description">${item.description}</p>
+                        <a href="mailto:${item.seller_email}" class="item-contact">Contact Seller</a>
+                    </div>
+                `;
+                
+                itemsContainer.appendChild(itemCard);
+            });
+        }
+        
+        // Helper function to get condition text
+        function getConditionText(condition) {
+            switch(condition) {
+                case 'new': return 'New';
+                case 'slightly-used': return 'Slightly Used';
+                case 'heavily-used': return 'Heavily Used';
+                default: return condition;
+            }
+        }
+        
+        // Initialize the page
+        loadMarketplaceItems();
+    </script>
+</body>
+</html>
