@@ -13,8 +13,8 @@ CORS(app)
 
 # Initialize rate limiting
 limiter = Limiter(
-    get_remote_address,
-    app=app,
+    app=app,  # Moved app to the first position as a keyword argument
+    key_func=get_remote_address,  # Changed to use key_func parameter
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
 )
