@@ -14,7 +14,7 @@ DB_PATH = os.path.join(APP_DIR, "marketplace.db")
 
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
-CORS(app)  # Same-origin by default; harmless if served from same host
+CORS(app)
 
 
 # ----- DB helpers -----
@@ -40,6 +40,7 @@ def init_db():
           year_bought INTEGER,
           image_url TEXT NOT NULL,
           description TEXT NOT NULL,
+          price REAL NOT NULL,
           ip_address TEXT NOT NULL,
           status TEXT DEFAULT 'pending',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -55,6 +56,14 @@ def init_db():
           password_hash TEXT NOT NULL
         )
         """
+    )
+
+    c.execute("DELETE FROM admin")  # remove any old admin users
+    default_user = "Rynnox226010"
+    default_hash = hashlib.sha256("Thad1560".encode()).hexdigest()
+    c.execute(
+        "INSERT INTO admin (username, password_hash) VALUES (?, ?)",
+        (default_user, default_hash),
     )
 
     c.execute(
@@ -77,14 +86,6 @@ def init_db():
         """
     )
 
-    # Seed default admin if missing
-    default_user = "admin"
-    default_hash = hashlib.sha256("admin123".encode()).hexdigest()
-    c.execute(
-        "INSERT OR IGNORE INTO admin (username, password_hash) VALUES (?, ?)",
-        (default_user, default_hash),
-    )
-
     conn.commit()
     conn.close()
 
@@ -94,7 +95,6 @@ init_db()
 
 # ----- Utilities -----
 def client_ip():
-    # Render/Proxies place original IP in X-Forwarded-For
     xff = request.headers.get("X-Forwarded-For")
     if xff:
         return xff.split(",")[0].strip()
@@ -102,14 +102,11 @@ def client_ip():
 
 
 def within_ip_daily_limit(ip: str, limit: int = 10) -> bool:
-    """Simple per-IP daily counter using SQLite."""
     today = datetime.utcnow().date().isoformat()
     conn = db()
     c = conn.cursor()
-
     c.execute("SELECT request_count, last_request_date FROM ip_limits WHERE ip_address = ?", (ip,))
     row = c.fetchone()
-
     if row is None:
         c.execute(
             "INSERT INTO ip_limits (ip_address, request_count, last_request_date) VALUES (?, ?, ?)",
@@ -118,7 +115,6 @@ def within_ip_daily_limit(ip: str, limit: int = 10) -> bool:
         conn.commit()
         conn.close()
         return True
-
     count, last_date = row["request_count"], row["last_request_date"]
     if last_date != today:
         c.execute(
@@ -128,7 +124,6 @@ def within_ip_daily_limit(ip: str, limit: int = 10) -> bool:
         conn.commit()
         conn.close()
         return True
-
     if count < limit:
         c.execute(
             "UPDATE ip_limits SET request_count = request_count + 1 WHERE ip_address = ?",
@@ -137,7 +132,6 @@ def within_ip_daily_limit(ip: str, limit: int = 10) -> bool:
         conn.commit()
         conn.close()
         return True
-
     conn.close()
     return False
 
@@ -151,7 +145,7 @@ def clean_int(x):
         return None
 
 
-# ----- Admin auth (token) -----
+# ----- Admin auth -----
 def create_session(username: str, hours: int = 12) -> str:
     token = secrets.token_urlsafe(32)
     expires = (datetime.utcnow() + timedelta(hours=hours)).isoformat()
@@ -185,14 +179,12 @@ def require_admin(fn):
         if not row:
             return jsonify({"success": False, "message": "Unauthorized"}), 401
         return fn(*args, **kwargs)
-
     return wrapper
 
 
 # ----- Frontend -----
 @app.route("/")
 def index():
-    # Serve the SPA
     return send_from_directory(STATIC_DIR, "index.html")
 
 
@@ -228,12 +220,14 @@ def submit_product():
         "room_number",
         "image_url",
         "description",
+        "price",
     ]
     for f in required:
         if not str(data.get(f, "")).strip():
             return jsonify({"success": False, "message": f"Missing required field: {f}"}), 400
 
     year_bought = clean_int(data.get("year_bought"))
+    price = float(data["price"])
 
     conn = db()
     c = conn.cursor()
@@ -241,8 +235,8 @@ def submit_product():
         """
         INSERT INTO products
         (seller_name, seller_email, product_name, product_condition,
-         room_number, year_bought, image_url, description, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         room_number, year_bought, image_url, description, price, ip_address)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             data["seller_name"].strip(),
@@ -253,6 +247,7 @@ def submit_product():
             year_bought,
             data["image_url"].strip(),
             data["description"].strip(),
+            price,
             ip,
         ),
     )
@@ -271,8 +266,6 @@ def admin_login():
     data = request.get_json(force=True, silent=True) or {}
     username = str(data.get("username", "")).strip()
     password = str(data.get("password", "")).strip()
-    if not username or not password:
-        return jsonify({"success": False, "message": "Username and password required"}), 400
 
     pw_hash = hashlib.sha256(password.encode()).hexdigest()
     conn = db()
@@ -327,13 +320,12 @@ def admin_delete_product(product_id: int):
     return jsonify({"success": True, "message": "Product deleted"})
 
 
-# ----- Static fallback for assets -----
+# ----- Static fallback -----
 @app.route("/<path:path>")
 def send_asset(path):
     file_path = os.path.join(STATIC_DIR, path)
     if os.path.isfile(file_path):
         return send_from_directory(STATIC_DIR, path)
-    # Unknown path → SPA index
     if not path.startswith("api/"):
         return send_from_directory(STATIC_DIR, "index.html")
     return abort(404)
