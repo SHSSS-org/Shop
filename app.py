@@ -63,6 +63,8 @@ def record_attempt(ip, success):
         return False
 
 # ----- Routes -----
+
+# Get approved products
 @app.route("/api/products", methods=["GET"])
 def get_products():
     conn = sqlite3.connect(DB_PATH)
@@ -82,14 +84,14 @@ def get_products():
             "description": r[7],
             "image": r[8],
             "email": r[9]
-        }
-        for r in rows
+        } for r in rows
     ]
     return jsonify(products)
 
+# Submit a new product
 @app.route("/api/submit", methods=["POST"])
 def submit_product():
-    data = request.get_json()  # <-- Read JSON from frontend
+    data = request.get_json()
     if not data:
         return jsonify({"error": "No JSON data received"}), 400
 
@@ -102,7 +104,7 @@ def submit_product():
     room = data.get("room", "")
     year = data.get("year", "")
     description = data.get("description", "")
-    image_url = data.get("image", "")  # <-- take image URL from user
+    image_url = data.get("image", "")
 
     if not validate_phone(phone):
         return jsonify({"error": "Invalid phone number"}), 400
@@ -116,6 +118,26 @@ def submit_product():
     conn.commit()
     conn.close()
     return jsonify({"success": True})
+
+# User removes their own ad
+@app.route("/api/remove", methods=["POST"])
+def remove_ad():
+    data = request.get_json()
+    product_id = data.get("id")
+    email = data.get("email")
+    if not product_id or not email:
+        return jsonify({"error": "Missing id or email"}), 400
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM products WHERE id=? AND email=?", (product_id, email))
+    conn.commit()
+    deleted = c.rowcount
+    conn.close()
+    if deleted:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": "No matching ad found"}), 404
 
 # ----- Admin Routes -----
 @app.route("/api/admin/login", methods=["POST"])
@@ -154,8 +176,7 @@ def admin_products():
             "description": r[7],
             "image": r[8],
             "status": r[9]
-        }
-        for r in rows
+        } for r in rows
     ]
     return jsonify(products)
 
