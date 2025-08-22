@@ -5,225 +5,235 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHSSS Marketplace</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
-    header { background:#007bff; color:#fff; padding:1rem; text-align:center; }
-    .container { max-width:900px; margin:2rem auto; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-    .product { border:1px solid #ddd; padding:1rem; margin:1rem 0; border-radius:6px; background:#fafafa; }
-    .product img { max-width:150px; display:block; margin-bottom:0.5rem; }
-    .btn { background:#007bff; color:#fff; padding:0.5rem 1rem; border:none; border-radius:4px; cursor:pointer; }
-    .btn:hover { background:#0056b3; }
-    nav { text-align:center; margin:1rem; }
-    nav button { margin:0 5px; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #333;
+    }
+    header {
+      background: #007bff;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-5px); }
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .card-content {
+      padding: 1rem;
+    }
+    .card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      color: #007bff;
+    }
+    .card p { margin: 0.3rem 0; font-size: 0.9rem; }
+    .btn {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
     /* Modal */
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
-    .modal-content { background:#fff; margin:5% auto; padding:20px; width:90%; max-width:400px; border-radius:8px; }
-    .close { float:right; font-size:1.5rem; cursor:pointer; }
-    input, textarea { width:100%; padding:0.5rem; margin:0.5rem 0; border:1px solid #ccc; border-radius:4px; }
-    #adminSection, #submitSection { display:none; }
+    .modal {
+      display: none;
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background:white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      width:90%;
+      max-width: 400px;
+      position: relative;
+    }
+    .modal-content h2 { margin-top: 0; }
+    .modal-content label { display:block; margin: 0.5rem 0 0.2rem; }
+    .modal-content input, .modal-content textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.8rem;
+      border:1px solid #ccc;
+      border-radius:5px;
+    }
+    .close-btn {
+      position: absolute;
+      right: 10px; top: 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #888;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>SHSSS Marketplace</h1>
-  </header>
-  <nav>
-    <button onclick="showSection('market')">Marketplace</button>
-    <button onclick="showSection('submit')">Submit Ad</button>
-    <button onclick="showSection('admin')">Admin</button>
-  </nav>
-
-  <div class="container" id="marketSection">
-    <h2>Available Products</h2>
-    <div id="products"></div>
+  <header>📦 SHSSS Marketplace</header>
+  <div class="container">
+    <div id="products" class="grid"></div>
   </div>
 
-  <div class="container" id="submitSection">
-    <h2>Submit New Product</h2>
-    <form id="submitForm">
-      <input type="text" id="name" placeholder="Your Name" required>
-      <input type="text" id="phone" placeholder="Phone (10 digits)" pattern="^[0-9]{10}$" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="text" id="productName" placeholder="Product Name" required>
-      <input type="text" id="condition" placeholder="Condition (New, Slightly used...)" required>
-      <input type="text" id="room" placeholder="Room Number" required>
-      <input type="number" id="price" placeholder="Price" required>
-      <input type="text" id="year" placeholder="Year of Buy (optional)">
-      <input type="text" id="image" placeholder="Image URL" required>
-      <textarea id="description" placeholder="Description"></textarea>
-      <button type="submit" class="btn">Submit</button>
-    </form>
-  </div>
+  <!-- Floating Add Button -->
+  <div class="floating-btn" onclick="openModal('submitModal')">+</div>
 
-  <div class="container" id="adminSection">
-    <h2>Admin Login</h2>
-    <form id="adminLoginForm">
-      <input type="text" id="adminUser" placeholder="Username" required>
-      <input type="password" id="adminPass" placeholder="Password" required>
-      <button type="submit" class="btn">Login</button>
-    </form>
-    <div id="adminDashboard" style="display:none;">
-      <h3>Pending Ads</h3>
-      <div id="pendingAds"></div>
-      <h3>Approved Ads</h3>
-      <div id="approvedAds"></div>
+  <!-- Buy Modal -->
+  <div class="modal" id="buyModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('buyModal')">&times;</span>
+      <h2>Buy Product</h2>
+      <form id="buyForm">
+        <input type="hidden" id="buyProductId">
+        <label>Name</label>
+        <input type="text" id="buyerName" required>
+        <label>Room Number</label>
+        <input type="text" id="buyerRoom" required>
+        <label>Phone</label>
+        <input type="tel" id="buyerPhone" pattern="[0-9]{10}" required>
+        <label>Email</label>
+        <input type="email" id="buyerEmail" required>
+        <button class="btn btn-primary" type="submit">Send Request</button>
+      </form>
     </div>
   </div>
 
-  <!-- Buy Modal -->
-  <div id="buyModal" class="modal">
+  <!-- Submit Modal -->
+  <div class="modal" id="submitModal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h3>Buy Product</h3>
-      <form id="buyForm">
-        <input type="hidden" id="buyProductId">
-        <input type="text" id="buyerName" placeholder="Your Name" required>
-        <input type="text" id="buyerRoom" placeholder="Room No" required>
-        <input type="text" id="buyerContact" placeholder="Contact" pattern="^[0-9]{10}$" required>
-        <input type="email" id="buyerEmail" placeholder="Email" required>
-        <button type="submit" class="btn">Submit</button>
+      <span class="close-btn" onclick="closeModal('submitModal')">&times;</span>
+      <h2>List a Product</h2>
+      <form id="submitForm">
+        <label>Name</label>
+        <input type="text" name="name" required>
+        <label>Phone</label>
+        <input type="tel" name="phone" pattern="[0-9]{10}" required>
+        <label>Email</label>
+        <input type="email" name="email" required>
+        <label>Product Name</label>
+        <input type="text" name="product_name" required>
+        <label>Price</label>
+        <input type="number" name="price" required>
+        <label>Condition</label>
+        <input type="text" name="condition" required>
+        <label>Room No</label>
+        <input type="text" name="room" required>
+        <label>Description</label>
+        <textarea name="description" rows="3"></textarea>
+        <label>Image URL</label>
+        <input type="url" name="image" required>
+        <button class="btn btn-primary" type="submit">Submit</button>
       </form>
     </div>
   </div>
 
   <script>
-    const API_BASE = "https://shop-fq1v.onrender.com/api";
-    let adminToken = null;
+    const API = "https://shop-7eol.onrender.com/api";
 
-    function showSection(section) {
-      document.getElementById("marketSection").style.display = "none";
-      document.getElementById("submitSection").style.display = "none";
-      document.getElementById("adminSection").style.display = "none";
-      if(section === "market") document.getElementById("marketSection").style.display = "block";
-      if(section === "submit") document.getElementById("submitSection").style.display = "block";
-      if(section === "admin") document.getElementById("adminSection").style.display = "block";
-    }
-
-    async function fetchProducts() {
-      try {
-        const res = await fetch(`${API_BASE}/products`);
-        const products = await res.json();
-        const container = document.getElementById("products");
-        container.innerHTML = "";
-        products.forEach(p => {
-          const div = document.createElement("div");
-          div.className = "product";
-          div.innerHTML = `
-            <img src="${p.image}" alt="Product">
-            <h3>${p.name} - ₹${p.price}</h3>
+    async function loadProducts() {
+      const res = await fetch(API + "/products");
+      const data = await res.json();
+      const container = document.getElementById("products");
+      container.innerHTML = "";
+      data.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <img src="${p.image}" alt="${p.product_name}">
+          <div class="card-content">
+            <h3>${p.product_name}</h3>
+            <p><b>Price:</b> ₹${p.price}</p>
             <p><b>Condition:</b> ${p.condition}</p>
-            <p><b>Room No:</b> ${p.room_no}</p>
-            <p><b>Seller:</b> ${p.seller || "N/A"}</p>
-            <p><b>Year of Buy:</b> ${p.year || "N/A"}</p>
-            <p><b>Email:</b> ${p.email}</p>
-            <p>${p.description}</p>
-            <button class="btn" onclick="openBuyModal(${p.id})">Buy</button>
-          `;
-          container.appendChild(div);
-        });
-      } catch (e) {
-        console.error("Error fetching products:", e);
-      }
+            <p>${p.description || ""}</p>
+            <button class="btn btn-primary" onclick="openBuy('${p.id}')">Buy Now</button>
+          </div>`;
+        container.appendChild(div);
+      });
     }
 
-    // Submit Product
-    document.getElementById("submitForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const data = {
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        product: document.getElementById("productName").value,
-        condition: document.getElementById("condition").value,
-        room_no: document.getElementById("room").value,
-        price: document.getElementById("price").value,
-        year: document.getElementById("year").value,
-        image: document.getElementById("image").value,
-        description: document.getElementById("description").value
-      };
-      try {
-        const res = await fetch(`${API_BASE}/submit`, {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify(data)
-        });
-        if(res.ok){ alert("Product submitted for approval!"); e.target.reset(); }
-        else alert("Failed to submit product");
-      } catch (err) { console.error(err); }
-    });
-
-    // Buy Product
-    function openBuyModal(productId) {
-      document.getElementById("buyProductId").value = productId;
-      document.getElementById("buyModal").style.display = "block";
+    function openBuy(id) {
+      document.getElementById("buyProductId").value = id;
+      openModal("buyModal");
     }
-    function closeModal() { document.getElementById("buyModal").style.display = "none"; }
-    document.getElementById("buyForm").addEventListener("submit", async e => {
+
+    function openModal(id) { document.getElementById(id).style.display="flex"; }
+    function closeModal(id) { document.getElementById(id).style.display="none"; }
+
+    document.getElementById("buyForm").onsubmit = async e => {
       e.preventDefault();
-      const data = {
+      const body = {
         product_id: document.getElementById("buyProductId").value,
         name: document.getElementById("buyerName").value,
         room: document.getElementById("buyerRoom").value,
-        contact: document.getElementById("buyerContact").value,
+        phone: document.getElementById("buyerPhone").value,
         email: document.getElementById("buyerEmail").value
       };
-      try {
-        const res = await fetch(`${API_BASE}/buy`, {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify(data)
-        });
-        if(res.ok){ alert("Your request has been sent!"); closeModal(); }
-        else alert("Failed to send request");
-      } catch (err) { console.error(err); }
-    });
+      const res = await fetch(API+"/buy", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(body)
+      });
+      if(res.ok){ alert("Request sent to seller!"); closeModal("buyModal"); }
+      else alert("Error sending request");
+    };
 
-    // Admin Login
-    document.getElementById("adminLoginForm").addEventListener("submit", async e => {
+    document.getElementById("submitForm").onsubmit = async e => {
       e.preventDefault();
-      try {
-        const res = await fetch(`${API_BASE}/admin/login`, {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({
-            username: document.getElementById("adminUser").value,
-            password: document.getElementById("adminPass").value
-          })
-        });
-        if(res.ok){
-          const data = await res.json();
-          adminToken = data.token;
-          document.getElementById("adminLoginForm").style.display = "none";
-          document.getElementById("adminDashboard").style.display = "block";
-          loadAdminAds();
-        } else alert("Invalid login");
-      } catch (err){ console.error(err); }
-    });
-
-    async function loadAdminAds(){
-      const res = await fetch(`${API_BASE}/admin/ads`, { headers:{Authorization: "Bearer " + adminToken} });
-      const data = await res.json();
-      document.getElementById("pendingAds").innerHTML = "";
-      document.getElementById("approvedAds").innerHTML = "";
-      data.pending.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `<h4>${p.name} - ₹${p.price}</h4>
-        <button onclick="approveAd(${p.id})">Approve</button>
-        <button onclick="rejectAd(${p.id})">Reject</button>
-        <button onclick="deleteAd(${p.id})">Delete</button>`;
-        document.getElementById("pendingAds").appendChild(div);
+      const form = new FormData(e.target);
+      const body = Object.fromEntries(form.entries());
+      const res = await fetch(API+"/submit", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(body)
       });
-      data.approved.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `<h4>${p.name} - ₹${p.price}</h4>
-        <button onclick="deleteAd(${p.id})">Delete</button>`;
-        document.getElementById("approvedAds").appendChild(div);
-      });
-    }
+      if(res.ok){ alert("Product submitted for approval!"); closeModal("submitModal"); }
+      else alert("Error submitting product");
+    };
 
-    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
-    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
-    async function deleteAd(id){ await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
-
-    window.onload = fetchProducts;
+    loadProducts();
   </script>
 </body>
 </html>
