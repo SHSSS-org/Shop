@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHSSS Marketplace</title>
   <style>
-    /* General */
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:0; background:#f0f2f5; color:#333; }
-    header { background:#0066ff; color:#fff; padding:1.2rem; text-align:center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);}
+    header { background:#0066ff; color:#fff; padding:1.2rem; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
     h1 { margin:0; font-size:2rem; letter-spacing:1px; }
     h2, h3, h4 { margin:0.5rem 0; }
 
@@ -138,10 +137,10 @@
           div.innerHTML=`
             <img src="${p.image}" alt="Product">
             <div class="product-details">
-              <h3>${p.name} - ₹${p.price}</h3>
+              <h3>${p.product} - ₹${p.price}</h3>
               <p><b>Condition:</b> ${p.condition}</p>
-              <p><b>Room No:</b> ${p.room_no}</p>
-              <p><b>Seller:</b> ${p.seller || "N/A"}</p>
+              <p><b>Room No:</b> ${p.room}</p>
+              <p><b>Seller:</b> ${p.name}</p>
               <p><b>Year of Buy:</b> ${p.year || "N/A"}</p>
               <p><b>Email:</b> ${p.email}</p>
               <p>${p.description}</p>
@@ -153,25 +152,31 @@
       } catch(e){ console.error("Error fetching products:", e);}
     }
 
+    // Submit Product (JSON with image URL)
     document.getElementById("submitForm").addEventListener("submit", async e=>{
       e.preventDefault();
-      const data={
+      const data = {
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value,
         email: document.getElementById("email").value,
         product: document.getElementById("productName").value,
         condition: document.getElementById("condition").value,
-        room_no: document.getElementById("room").value,
+        room: document.getElementById("room").value,
         price: document.getElementById("price").value,
         year: document.getElementById("year").value,
         image: document.getElementById("image").value,
         description: document.getElementById("description").value
       };
       try{
-        const res = await fetch(`${API_BASE}/submit`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+        const res = await fetch(`${API_BASE}/submit`, {
+          method:"POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
         if(res.ok){ alert("Product submitted for approval!"); e.target.reset(); }
-        else alert("Failed to submit product");
-      } catch(err){ console.error(err); }
+        else alert("Failed to submit product: " + (result.error || "Unknown error"));
+      } catch(err){ console.error(err); alert("Error submitting product"); }
     });
 
     function openBuyModal(productId){ document.getElementById("buyProductId").value=productId; document.getElementById("buyModal").style.display="flex"; }
@@ -193,50 +198,55 @@
       } catch(err){ console.error(err); }
     });
 
+    // Admin Login
     document.getElementById("adminLoginForm").addEventListener("submit", async e=>{
       e.preventDefault();
       try{
-        const res = await fetch(`${API_BASE}/admin/login`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({
-          username: document.getElementById("adminUser").value,
-          password: document.getElementById("adminPass").value
-        })});
+        const res = await fetch(`${API_BASE}/admin/login`, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            username: document.getElementById("adminUser").value,
+            password: document.getElementById("adminPass").value
+          })
+        });
+        const result = await res.json();
         if(res.ok){
-          const data = await res.json();
-          adminToken = data.token;
+          adminToken = "dummy"; // backend doesn't return token, we just check login
           document.getElementById("adminLoginForm").style.display="none";
           document.getElementById("adminDashboard").style.display="block";
           loadAdminAds();
-        } else alert("Invalid login");
+        } else alert("Invalid login: " + (result.error || ""));
       } catch(err){ console.error(err); }
     });
 
     async function loadAdminAds(){
-      const res = await fetch(`${API_BASE}/admin/ads`, { headers:{Authorization:"Bearer "+adminToken} });
+      const res = await fetch(`${API_BASE}/admin/products`);
       const data = await res.json();
-      const pending=document.getElementById("pendingAds");
-      const approved=document.getElementById("approvedAds");
-      pending.innerHTML=""; approved.innerHTML="";
-      data.pending.forEach(p=>{
-        const div=document.createElement("div");
-        div.className="product";
-        div.innerHTML=`<h4>${p.name} - ₹${p.price}</h4>
-        <button onclick="approveAd(${p.id})" class="btn">Approve</button>
-        <button onclick="rejectAd(${p.id})" class="btn">Reject</button>
-        <button onclick="deleteAd(${p.id})" class="btn">Delete</button>`;
-        pending.appendChild(div);
-      });
-      data.approved.forEach(p=>{
-        const div=document.createElement("div");
-        div.className="product";
-        div.innerHTML=`<h4>${p.name} - ₹${p.price}</h4>
-        <button onclick="deleteAd(${p.id})" class="btn">Delete</button>`;
-        approved.appendChild(div);
+      const pending = document.getElementById("pendingAds");
+      const approved = document.getElementById("approvedAds");
+      pending.innerHTML = "";
+      approved.innerHTML = "";
+
+      data.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        const buttons = [];
+        if(p.status==="pending"){
+          buttons.push(`<button onclick="approveAd(${p.id})" class="btn">Approve</button>`);
+          buttons.push(`<button onclick="rejectAd(${p.id})" class="btn">Reject</button>`);
+        }
+        buttons.push(`<button onclick="deleteAd(${p.id})" class="btn">Delete</button>`);
+
+        div.innerHTML = `<h4>${p.product} - ₹${p.price}</h4>${buttons.join(" ")}`;
+        if(p.status==="pending") pending.appendChild(div);
+        else approved.appendChild(div);
       });
     }
 
-    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
-    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
-    async function deleteAd(id){ await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE", headers:{Authorization:"Bearer "+adminToken}}); loadAdminAds(); }
+    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST"}); loadAdminAds(); }
+    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST"}); loadAdminAds(); }
+    async function deleteAd(id){ await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"}); loadAdminAds(); }
 
     window.onload = fetchProducts;
   </script>
