@@ -1,2 +1,0 @@
-Flask==2.3.3
-Flask-Limiter==2.6.5
