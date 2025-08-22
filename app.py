@@ -1,17 +1,13 @@
 import os
 import sqlite3
 import re
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 
 # ----- Config -----
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(APP_DIR, "uploads")
 DB_PATH = os.path.join(APP_DIR, "marketplace.db")
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 CORS(app)
@@ -71,7 +67,7 @@ def record_attempt(ip, success):
 def get_products():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, name, product, price, condition, room, year, description, image FROM products WHERE status='approved'")
+    c.execute("SELECT id, name, product, price, condition, room, year, description, image, email FROM products WHERE status='approved'")
     rows = c.fetchall()
     conn.close()
     products = [
@@ -84,7 +80,8 @@ def get_products():
             "room": r[5],
             "year": r[6],
             "description": r[7],
-            "image": r[8]
+            "image": r[8],
+            "email": r[9]
         }
         for r in rows
     ]
@@ -92,45 +89,39 @@ def get_products():
 
 @app.route("/api/submit", methods=["POST"])
 def submit_product():
-    data = request.form
+    data = request.get_json()  # <-- Read JSON from frontend
+    if not data:
+        return jsonify({"error": "No JSON data received"}), 400
+
     name = data.get("name", "")
     phone = data.get("phone", "")
     email = data.get("email", "")
     product = data.get("product", "")
-    price = data.get("price", "0")
+    price = data.get("price", 0)
     condition = data.get("condition", "")
     room = data.get("room", "")
     year = data.get("year", "")
     description = data.get("description", "")
+    image_url = data.get("image", "")  # <-- take image URL from user
 
     if not validate_phone(phone):
         return jsonify({"error": "Invalid phone number"}), 400
-
-    image_file = request.files.get("image")
-    image_path = None
-    if image_file:
-        filename = secure_filename(image_file.filename)
-        image_path = os.path.join("uploads", filename)
-        image_file.save(os.path.join(APP_DIR, image_path))
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
         INSERT INTO products (name, phone, email, product, price, condition, room, year, description, image, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-    """, (name, phone, email, product, price, condition, room, year, description, image_path))
+    """, (name, phone, email, product, price, condition, room, year, description, image_url))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
 
-@app.route("/uploads/<path:filename>")
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_DIR, filename)
-
+# ----- Admin Routes -----
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
     ip = request.remote_addr
-    data = request.json
+    data = request.get_json()
     username = data.get("username", "")
     password = data.get("password", "")
 
