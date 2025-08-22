@@ -81,7 +81,7 @@
   </div>
 
   <script>
-    const API_BASE = "https://shop-gl1t.onrender.com/api";
+    const API_BASE = "https://shop-ebp4.onrender.com/api";
 
     function showSection(section){
       document.getElementById("marketSection").style.display="none";
@@ -118,6 +118,7 @@
       } catch(e){ console.error("Error fetching products:", e);}
     }
 
+    // Submit Product
     document.getElementById("submitForm").addEventListener("submit", async e=>{
       e.preventDefault();
       const data = {
@@ -181,7 +182,9 @@
           buttons.push(`<button onclick="approveAd(${p.id})" class="btn">Approve</button>`);
           buttons.push(`<button onclick="rejectAd(${p.id})" class="btn">Reject</button>`);
         }
+        // Admin can delete any ad (pending or approved)
         buttons.push(`<button onclick="deleteAd(${p.id})" class="btn">Delete</button>`);
+
         div.innerHTML = `<h4>${p.product} - ₹${p.price}</h4>${buttons.join(" ")}`;
         if(p.status==="pending") pending.appendChild(div);
         else approved.appendChild(div);
@@ -190,7 +193,11 @@
 
     async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST"}); loadAdminAds(); }
     async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST"}); loadAdminAds(); }
-    async function deleteAd(id){ await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"}); loadAdminAds(); }
+    async function deleteAd(id){
+      if(!confirm("Are you sure you want to delete this product?")) return;
+      await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"});
+      loadAdminAds();
+    }
 
     window.onload = fetchProducts;
   </script>
