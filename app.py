@@ -13,8 +13,8 @@ CORS(app)
 
 # Initialize rate limiting
 limiter = Limiter(
-    app=app,  # Moved app to the first position as a keyword argument
-    key_func=get_remote_address,  # Changed to use key_func parameter
+    app=app,
+    key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
 )
@@ -252,4 +252,7 @@ def delete_product(product_id):
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Get port from environment variable or default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    # Bind to 0.0.0.0 to make it accessible externally
+    app.run(host='0.0.0.0', port=port, debug=False)
