@@ -100,9 +100,9 @@ def check_ip_limit(ip_address):
         # First request from this IP today
         c.execute("INSERT INTO ip_limits (ip_address, request_count, last_request_date) VALUES (?, ?, ?)", 
                  (ip_address, 1, today))
-        conn.commit()
-        conn.close()
-        return True
+    conn.commit()
+    conn.close()
+    return True
 
 # Routes
 @app.route('/api/products', methods=['GET'])
