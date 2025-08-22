@@ -387,15 +387,31 @@
     <!-- Main Content -->
     <div class="container">
         <!-- Products Page -->
-        <section id="products-page" class="page-section active">
+        <section id="products-page" class="page-section">
             <h2>Items for Sale</h2>
             <div id="products-container" class="products-grid">
-                <!-- Products will be loaded here -->
+                <!-- Sample product -->
+                <div class="product-card">
+                    <div class="product-image" style="background-image: url('https://drive.google.com/uc?id=1JkZ0hQZQZQZQZQZQZQZQZQZQZQZQZQZQZ')"></div>
+                    <div class="product-content">
+                        <h3>Calculus Textbook</h3>
+                        <div class="product-meta">
+                            <span>Condition: Slightly Used</span>
+                            <span>Room: 203</span>
+                        </div>
+                        <p class="product-description">Hardcover calculus textbook from last semester. Minimal highlighting, perfect condition for next year's students.</p>
+                        <div class="product-contact">
+                            <p><strong>Seller:</strong> Alex Johnson</p>
+                            <p><strong>Email:</strong> alex.johnson@student.edu</p>
+                            <p><strong>Year Bought:</strong> 2024</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- List Product Page -->
-        <section id="list-product-page" class="page-section">
+        <section id="list-product-page" class="page-section active">
             <div class="form-container">
                 <h2 class="form-title">List a Product for Sale</h2>
                 <div id="form-alert"></div>
@@ -544,7 +560,8 @@
 
         // Load products on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
+            // Show the list product form by default
+            showPage('list-product-page');
             
             // Form submission
             document.getElementById('product-form').addEventListener('submit', function(e) {
@@ -614,7 +631,7 @@
             })
             .then(response => response.json())
             .then(result => {
-        const alertDiv = document.getElementById('form-alert');
+                const alertDiv = document.getElementById('form-alert');
                 if (result.success) {
                     alertDiv.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
                     form.reset();
