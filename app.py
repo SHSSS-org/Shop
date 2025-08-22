@@ -1,184 +1,201 @@
 import os
 import sqlite3
 import re
-import secrets
-from functools import wraps
-from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory, abort
-from werkzeug.utils import secure_filename
+from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
 
-# --- Config ---
+# ----- Config -----
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(APP_DIR, "uploads")
 DB_PATH = os.path.join(APP_DIR, "marketplace.db")
-UPLOAD_DIR = os.path.join(APP_DIR, "static", "uploads")
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+app = Flask(__name__)
+CORS(app)
 
 ADMIN_USER = "Rynnox226010"
 ADMIN_PASS = "Thad1560"
-MAX_LOGIN_ATTEMPTS = 5
+MAX_ATTEMPTS = 5
+FAILED_ATTEMPTS = {}
+BLOCKED_USERS = {}
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
-app.secret_key = secrets.token_hex(16)
-CORS(app)
-
-# Track login attempts
-login_attempts = {}
-
-# --- DB Init ---
+# ----- DB Setup -----
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        condition TEXT,
-        room_no TEXT,
-        seller TEXT,
-        year TEXT,
-        email TEXT,
-        phone TEXT,
-        description TEXT,
-        price REAL,
-        image TEXT,
-        approved INTEGER DEFAULT 0
-    )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            phone TEXT,
+            email TEXT,
+            product TEXT,
+            price REAL,
+            condition TEXT,
+            room TEXT,
+            year TEXT,
+            description TEXT,
+            image TEXT,
+            status TEXT DEFAULT 'pending',
+            created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     conn.commit()
     conn.close()
 
 init_db()
 
-# --- Helpers ---
-def check_phone(phone):
-    """Validate phone number (10 digits only)."""
-    return re.match(r"^[0-9]{10}$", phone)
+# ----- Helpers -----
+def validate_phone(phone):
+    return re.fullmatch(r"\d{10}", phone) is not None
 
-def login_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if not session.get("logged_in"):
-            return redirect(url_for("admin_login"))
-        return f(*args, **kwargs)
-    return wrapper
+def record_attempt(ip, success):
+    now = datetime.now()
+    if ip in BLOCKED_USERS and now < BLOCKED_USERS[ip]:
+        return False  # blocked
 
-# --- Routes ---
+    if success:
+        FAILED_ATTEMPTS[ip] = 0
+        return True
+    else:
+        FAILED_ATTEMPTS[ip] = FAILED_ATTEMPTS.get(ip, 0) + 1
+        if FAILED_ATTEMPTS[ip] >= MAX_ATTEMPTS:
+            BLOCKED_USERS[ip] = now + timedelta(minutes=15)
+        return False
 
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/submit")
-def submit_page():
-    return render_template("submit.html")
-
-@app.route("/admin", methods=["GET", "POST"])
-def admin_login():
-    ip = request.remote_addr
-    if ip not in login_attempts:
-        login_attempts[ip] = {"count": 0, "blocked_until": None}
-
-    attempt = login_attempts[ip]
-
-    if attempt["blocked_until"] and datetime.now() < attempt["blocked_until"]:
-        return "Too many failed attempts. Try again later.", 403
-
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        if username == ADMIN_USER and password == ADMIN_PASS:
-            session["logged_in"] = True
-            login_attempts[ip] = {"count": 0, "blocked_until": None}
-            return redirect(url_for("admin_panel"))
-        else:
-            attempt["count"] += 1
-            if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
-                attempt["blocked_until"] = datetime.now() + timedelta(minutes=10)
-            return "Invalid credentials", 403
-
-    return render_template("admin.html")
-
-@app.route("/admin/panel")
-@login_required
-def admin_panel():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT * FROM products")
-    products = c.fetchall()
-    conn.close()
-    return render_template("admin_panel.html", products=products)
-
-@app.route("/api/products")
+# ----- Routes -----
+@app.route("/api/products", methods=["GET"])
 def get_products():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM products WHERE approved=1")
+    c.execute("SELECT id, name, product, price, condition, room, year, description, image FROM products WHERE status='approved'")
     rows = c.fetchall()
     conn.close()
-    products = []
-    for r in rows:
-        products.append({
-            "id": r[0], "name": r[1], "condition": r[2],
-            "room_no": r[3], "seller": r[4], "year": r[5],
-            "email": r[6], "phone": r[7], "description": r[8],
-            "price": r[9], "image": r[10]
-        })
+    products = [
+        {
+            "id": r[0],
+            "name": r[1],
+            "product": r[2],
+            "price": r[3],
+            "condition": r[4],
+            "room": r[5],
+            "year": r[6],
+            "description": r[7],
+            "image": r[8]
+        }
+        for r in rows
+    ]
     return jsonify(products)
 
 @app.route("/api/submit", methods=["POST"])
 def submit_product():
     data = request.form
-    file = request.files.get("image")
+    name = data.get("name", "")
+    phone = data.get("phone", "")
+    email = data.get("email", "")
+    product = data.get("product", "")
+    price = data.get("price", "0")
+    condition = data.get("condition", "")
+    room = data.get("room", "")
+    year = data.get("year", "")
+    description = data.get("description", "")
 
-    if not check_phone(data.get("phone", "")):
-        return jsonify({"error": "Invalid phone number format"}), 400
+    if not validate_phone(phone):
+        return jsonify({"error": "Invalid phone number"}), 400
 
-    filename = None
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_DIR, filename))
-        filename = f"/static/uploads/{filename}"
+    image_file = request.files.get("image")
+    image_path = None
+    if image_file:
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join("uploads", filename)
+        image_file.save(os.path.join(APP_DIR, image_path))
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("""INSERT INTO products
-        (name, condition, room_no, seller, year, email, phone, description, price, image, approved)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)""",
-        (data["name"], data["condition"], data["room_no"], data.get("seller"),
-         data.get("year"), data["email"], data["phone"], data["description"], data["price"], filename))
+    c.execute("""
+        INSERT INTO products (name, phone, email, product, price, condition, room, year, description, image, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    """, (name, phone, email, product, price, condition, room, year, description, image_path))
     conn.commit()
     conn.close()
-    return jsonify({"message": "Submitted successfully, pending approval"})
+    return jsonify({"success": True})
+
+@app.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
+
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    ip = request.remote_addr
+    data = request.json
+    username = data.get("username", "")
+    password = data.get("password", "")
+
+    if ip in BLOCKED_USERS and datetime.now() < BLOCKED_USERS[ip]:
+        return jsonify({"error": "Too many attempts. Try later."}), 403
+
+    if username == ADMIN_USER and password == ADMIN_PASS:
+        record_attempt(ip, True)
+        return jsonify({"success": True})
+    else:
+        record_attempt(ip, False)
+        return jsonify({"error": "Invalid credentials"}), 401
+
+@app.route("/api/admin/products", methods=["GET"])
+def admin_products():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, name, product, price, condition, room, year, description, image, status FROM products")
+    rows = c.fetchall()
+    conn.close()
+    products = [
+        {
+            "id": r[0],
+            "name": r[1],
+            "product": r[2],
+            "price": r[3],
+            "condition": r[4],
+            "room": r[5],
+            "year": r[6],
+            "description": r[7],
+            "image": r[8],
+            "status": r[9]
+        }
+        for r in rows
+    ]
+    return jsonify(products)
 
 @app.route("/api/admin/approve/<int:pid>", methods=["POST"])
-@login_required
 def approve_product(pid):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("UPDATE products SET approved=1 WHERE id=?", (pid,))
+    c.execute("UPDATE products SET status='approved' WHERE id=?", (pid,))
     conn.commit()
     conn.close()
-    return redirect(url_for("admin_panel"))
+    return jsonify({"success": True})
 
 @app.route("/api/admin/reject/<int:pid>", methods=["POST"])
-@login_required
 def reject_product(pid):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id=?", (pid,))
+    c.execute("UPDATE products SET status='rejected' WHERE id=?", (pid,))
     conn.commit()
     conn.close()
-    return redirect(url_for("admin_panel"))
+    return jsonify({"success": True})
 
-@app.route("/api/admin/delete/<int:pid>", methods=["POST"])
-@login_required
+@app.route("/api/admin/delete/<int:pid>", methods=["DELETE"])
 def delete_product(pid):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM products WHERE id=?", (pid,))
     conn.commit()
     conn.close()
-    return redirect(url_for("admin_panel"))
+    return jsonify({"success": True})
 
+# ----- Run -----
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
