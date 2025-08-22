@@ -1,336 +1,184 @@
 import os
 import sqlite3
-import hashlib
+import re
 import secrets
 from functools import wraps
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory, abort
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
-# ----- App setup -----
+# --- Config ---
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(APP_DIR, "static")
 DB_PATH = os.path.join(APP_DIR, "marketplace.db")
+UPLOAD_DIR = os.path.join(APP_DIR, "static", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+ADMIN_USER = "Rynnox226010"
+ADMIN_PASS = "Thad1560"
+MAX_LOGIN_ATTEMPTS = 5
+
+app = Flask(__name__, static_folder="static", template_folder="templates")
+app.secret_key = secrets.token_hex(16)
 CORS(app)
 
+# Track login attempts
+login_attempts = {}
 
-# ----- DB helpers -----
-def db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
+# --- DB Init ---
 def init_db():
-    conn = db()
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS products (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          seller_name TEXT NOT NULL,
-          seller_email TEXT NOT NULL,
-          product_name TEXT NOT NULL,
-          product_condition TEXT NOT NULL,
-          room_number TEXT NOT NULL,
-          year_bought INTEGER,
-          image_url TEXT NOT NULL,
-          description TEXT NOT NULL,
-          price REAL NOT NULL,
-          ip_address TEXT NOT NULL,
-          status TEXT DEFAULT 'pending',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
-
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS admin (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT UNIQUE NOT NULL,
-          password_hash TEXT NOT NULL
-        )
-        """
-    )
-
-    c.execute("DELETE FROM admin")  # remove any old admin users
-    default_user = "Rynnox226010"
-    default_hash = hashlib.sha256("Thad1560".encode()).hexdigest()
-    c.execute(
-        "INSERT INTO admin (username, password_hash) VALUES (?, ?)",
-        (default_user, default_hash),
-    )
-
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS ip_limits (
-          ip_address TEXT PRIMARY KEY,
-          request_count INTEGER DEFAULT 0,
-          last_request_date TEXT
-        )
-        """
-    )
-
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS admin_sessions (
-          token TEXT PRIMARY KEY,
-          username TEXT NOT NULL,
-          expires_at TEXT NOT NULL
-        )
-        """
-    )
-
+    c.execute("""CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        condition TEXT,
+        room_no TEXT,
+        seller TEXT,
+        year TEXT,
+        email TEXT,
+        phone TEXT,
+        description TEXT,
+        price REAL,
+        image TEXT,
+        approved INTEGER DEFAULT 0
+    )""")
     conn.commit()
     conn.close()
-
 
 init_db()
 
+# --- Helpers ---
+def check_phone(phone):
+    """Validate phone number (10 digits only)."""
+    return re.match(r"^[0-9]{10}$", phone)
 
-# ----- Utilities -----
-def client_ip():
-    xff = request.headers.get("X-Forwarded-For")
-    if xff:
-        return xff.split(",")[0].strip()
-    return request.remote_addr or "unknown"
-
-
-def within_ip_daily_limit(ip: str, limit: int = 10) -> bool:
-    today = datetime.utcnow().date().isoformat()
-    conn = db()
-    c = conn.cursor()
-    c.execute("SELECT request_count, last_request_date FROM ip_limits WHERE ip_address = ?", (ip,))
-    row = c.fetchone()
-    if row is None:
-        c.execute(
-            "INSERT INTO ip_limits (ip_address, request_count, last_request_date) VALUES (?, ?, ?)",
-            (ip, 1, today),
-        )
-        conn.commit()
-        conn.close()
-        return True
-    count, last_date = row["request_count"], row["last_request_date"]
-    if last_date != today:
-        c.execute(
-            "UPDATE ip_limits SET request_count = 1, last_request_date = ? WHERE ip_address = ?",
-            (today, ip),
-        )
-        conn.commit()
-        conn.close()
-        return True
-    if count < limit:
-        c.execute(
-            "UPDATE ip_limits SET request_count = request_count + 1 WHERE ip_address = ?",
-            (ip,),
-        )
-        conn.commit()
-        conn.close()
-        return True
-    conn.close()
-    return False
-
-
-def clean_int(x):
-    if x is None:
-        return None
-    try:
-        return int(str(x).strip())
-    except Exception:
-        return None
-
-
-# ----- Admin auth -----
-def create_session(username: str, hours: int = 12) -> str:
-    token = secrets.token_urlsafe(32)
-    expires = (datetime.utcnow() + timedelta(hours=hours)).isoformat()
-    conn = db()
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO admin_sessions (token, username, expires_at) VALUES (?, ?, ?)",
-        (token, username, expires),
-    )
-    conn.commit()
-    conn.close()
-    return token
-
-
-def require_admin(fn):
-    @wraps(fn)
+def login_required(f):
+    @wraps(f)
     def wrapper(*args, **kwargs):
-        auth = request.headers.get("Authorization", "")
-        if not auth.startswith("Bearer "):
-            return jsonify({"success": False, "message": "Unauthorized"}), 401
-        token = auth.split(" ", 1)[1].strip()
-        now = datetime.utcnow().isoformat()
-        conn = db()
-        c = conn.cursor()
-        c.execute(
-            "SELECT token FROM admin_sessions WHERE token = ? AND expires_at > ?",
-            (token, now),
-        )
-        row = c.fetchone()
-        conn.close()
-        if not row:
-            return jsonify({"success": False, "message": "Unauthorized"}), 401
-        return fn(*args, **kwargs)
+        if not session.get("logged_in"):
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
     return wrapper
 
+# --- Routes ---
 
-# ----- Frontend -----
 @app.route("/")
-def index():
-    return send_from_directory(STATIC_DIR, "index.html")
+def home():
+    return render_template("index.html")
 
+@app.route("/submit")
+def submit_page():
+    return render_template("submit.html")
 
-# ----- Public API -----
-@app.get("/api/health")
-def health():
-    return {"ok": True}
-
-
-@app.get("/api/products")
-def list_products():
-    conn = db()
-    c = conn.cursor()
-    c.execute("SELECT * FROM products WHERE status = 'approved' ORDER BY created_at DESC")
-    products = [dict(r) for r in c.fetchall()]
-    conn.close()
-    return jsonify(products)
-
-
-@app.post("/api/products")
-def submit_product():
-    data = request.get_json(force=True, silent=True) or {}
-    ip = client_ip()
-
-    if not within_ip_daily_limit(ip, limit=10):
-        return jsonify({"success": False, "message": "Daily limit reached (10 listings per IP)."}), 429
-
-    required = [
-        "seller_name",
-        "seller_email",
-        "product_name",
-        "product_condition",
-        "room_number",
-        "image_url",
-        "description",
-        "price",
-    ]
-    for f in required:
-        if not str(data.get(f, "")).strip():
-            return jsonify({"success": False, "message": f"Missing required field: {f}"}), 400
-
-    year_bought = clean_int(data.get("year_bought"))
-    price = float(data["price"])
-
-    conn = db()
-    c = conn.cursor()
-    c.execute(
-        """
-        INSERT INTO products
-        (seller_name, seller_email, product_name, product_condition,
-         room_number, year_bought, image_url, description, price, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            data["seller_name"].strip(),
-            data["seller_email"].strip(),
-            data["product_name"].strip(),
-            data["product_condition"].strip(),
-            data["room_number"].strip(),
-            year_bought,
-            data["image_url"].strip(),
-            data["description"].strip(),
-            price,
-            ip,
-        ),
-    )
-    pid = c.lastrowid
-    conn.commit()
-    conn.close()
-
-    return jsonify(
-        {"success": True, "message": "Product submitted. Visible after admin approval.", "product_id": pid}
-    )
-
-
-# ----- Admin API -----
-@app.post("/api/admin/login")
+@app.route("/admin", methods=["GET", "POST"])
 def admin_login():
-    data = request.get_json(force=True, silent=True) or {}
-    username = str(data.get("username", "")).strip()
-    password = str(data.get("password", "")).strip()
+    ip = request.remote_addr
+    if ip not in login_attempts:
+        login_attempts[ip] = {"count": 0, "blocked_until": None}
 
-    pw_hash = hashlib.sha256(password.encode()).hexdigest()
-    conn = db()
+    attempt = login_attempts[ip]
+
+    if attempt["blocked_until"] and datetime.now() < attempt["blocked_until"]:
+        return "Too many failed attempts. Try again later.", 403
+
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USER and password == ADMIN_PASS:
+            session["logged_in"] = True
+            login_attempts[ip] = {"count": 0, "blocked_until": None}
+            return redirect(url_for("admin_panel"))
+        else:
+            attempt["count"] += 1
+            if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
+                attempt["blocked_until"] = datetime.now() + timedelta(minutes=10)
+            return "Invalid credentials", 403
+
+    return render_template("admin.html")
+
+@app.route("/admin/panel")
+@login_required
+def admin_panel():
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id FROM admin WHERE username = ? AND password_hash = ?", (username, pw_hash))
-    ok = c.fetchone()
+    c.execute("SELECT * FROM products")
+    products = c.fetchall()
     conn.close()
+    return render_template("admin_panel.html", products=products)
 
-    if not ok:
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
-
-    token = create_session(username)
-    return jsonify({"success": True, "message": "Login successful", "token": token})
-
-
-@app.get("/api/admin/products")
-@require_admin
-def admin_products():
-    status = request.args.get("status", "pending")
-    conn = db()
+@app.route("/api/products")
+def get_products():
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM products WHERE status = ? ORDER BY created_at DESC", (status,))
-    products = [dict(r) for r in c.fetchall()]
+    c.execute("SELECT * FROM products WHERE approved=1")
+    rows = c.fetchall()
     conn.close()
+    products = []
+    for r in rows:
+        products.append({
+            "id": r[0], "name": r[1], "condition": r[2],
+            "room_no": r[3], "seller": r[4], "year": r[5],
+            "email": r[6], "phone": r[7], "description": r[8],
+            "price": r[9], "image": r[10]
+        })
     return jsonify(products)
 
+@app.route("/api/submit", methods=["POST"])
+def submit_product():
+    data = request.form
+    file = request.files.get("image")
 
-@app.put("/api/admin/products/<int:product_id>")
-@require_admin
-def admin_update_product(product_id: int):
-    data = request.get_json(force=True, silent=True) or {}
-    status = data.get("status")
-    if status not in {"pending", "approved"}:
-        return jsonify({"success": False, "message": "Status must be 'pending' or 'approved'"}), 400
+    if not check_phone(data.get("phone", "")):
+        return jsonify({"error": "Invalid phone number format"}), 400
 
-    conn = db()
+    filename = None
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(UPLOAD_DIR, filename))
+        filename = f"/static/uploads/{filename}"
+
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("UPDATE products SET status = ? WHERE id = ?", (status, product_id))
+    c.execute("""INSERT INTO products
+        (name, condition, room_no, seller, year, email, phone, description, price, image, approved)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)""",
+        (data["name"], data["condition"], data["room_no"], data.get("seller"),
+         data.get("year"), data["email"], data["phone"], data["description"], data["price"], filename))
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "message": "Product status updated"})
+    return jsonify({"message": "Submitted successfully, pending approval"})
 
-
-@app.delete("/api/admin/products/<int:product_id>")
-@require_admin
-def admin_delete_product(product_id: int):
-    conn = db()
+@app.route("/api/admin/approve/<int:pid>", methods=["POST"])
+@login_required
+def approve_product(pid):
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    c.execute("UPDATE products SET approved=1 WHERE id=?", (pid,))
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "message": "Product deleted"})
+    return redirect(url_for("admin_panel"))
 
+@app.route("/api/admin/reject/<int:pid>", methods=["POST"])
+@login_required
+def reject_product(pid):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM products WHERE id=?", (pid,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
 
-# ----- Static fallback -----
-@app.route("/<path:path>")
-def send_asset(path):
-    file_path = os.path.join(STATIC_DIR, path)
-    if os.path.isfile(file_path):
-        return send_from_directory(STATIC_DIR, path)
-    if not path.startswith("api/"):
-        return send_from_directory(STATIC_DIR, "index.html")
-    return abort(404)
-
+@app.route("/api/admin/delete/<int:pid>", methods=["POST"])
+@login_required
+def delete_product(pid):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM products WHERE id=?", (pid,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "10000"))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)
