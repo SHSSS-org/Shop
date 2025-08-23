@@ -17,11 +17,11 @@ FAILED_ATTEMPTS = {}
 BLOCKED_USERS = {}
 
 # Database connection
-DB_HOST = "dpg-d2kguqndiees73c6jh90-a"
+DB_HOST = "dpg-d2kguqndiees73c6jh90-a.oregon-postgres.render.com"
 DB_PORT = 5432
 DB_NAME = "database_azk8"
 DB_USER = "database_azk8_user"
-DB_PASSWORD = "8:ULBKnews1DwMizp8c871HH13spEC4yn"
+DB_PASSWORD = "8fJLBWqwqiDwMWzp8cS7lHHi3spEC4ym"
 
 def get_db_connection():
     return psycopg.connect(
@@ -78,7 +78,6 @@ def record_attempt(ip, success):
         return False
 
 # ----- Routes -----
-
 @app.route("/api/products", methods=["GET"])
 def get_products():
     conn = get_db_connection()
