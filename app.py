@@ -3,8 +3,8 @@ import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime, timedelta
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 
 # ----- Config -----
 app = Flask(__name__)
@@ -16,46 +16,44 @@ MAX_ATTEMPTS = 5
 FAILED_ATTEMPTS = {}
 BLOCKED_USERS = {}
 
-# Database connection details from your file
-DB_HOST = "dpg-d2kguqndiees73c6jh90-a"  # Using the hostname you specified
+# Database connection
+DB_HOST = "dpg-d2kguqndiees73c6jh90-a"
 DB_PORT = 5432
 DB_NAME = "database_azk8"
 DB_USER = "database_azk8_user"
 DB_PASSWORD = "8:ULBKnews1DwMizp8c871HH13spEC4yn"
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# ----- DB Connection -----
 def get_db_connection():
-    conn = psycopg2.connect(
+    return psycopg.connect(
         host=DB_HOST,
-        database=DB_NAME,
+        dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD,
-        port=DB_PORT
+        port=DB_PORT,
+        row_factory=dict_row
     )
-    return conn
 
 # ----- DB Setup -----
 def init_db():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS products (
-            id SERIAL PRIMARY KEY,
-            name TEXT,
-            phone TEXT,
-            email TEXT,
-            product TEXT,
-            price REAL,
-            condition TEXT,
-            room TEXT,
-            year TEXT,
-            description TEXT,
-            image TEXT,
-            status TEXT DEFAULT 'pending',
-            created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                phone TEXT,
+                email TEXT,
+                product TEXT,
+                price REAL,
+                condition TEXT,
+                room TEXT,
+                year TEXT,
+                description TEXT,
+                image TEXT,
+                status TEXT DEFAULT 'pending',
+                created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
     conn.commit()
     conn.close()
 
@@ -68,7 +66,7 @@ def validate_phone(phone):
 def record_attempt(ip, success):
     now = datetime.now()
     if ip in BLOCKED_USERS and now < BLOCKED_USERS[ip]:
-        return False  # blocked
+        return False
 
     if success:
         FAILED_ATTEMPTS[ip] = 0
@@ -81,20 +79,15 @@ def record_attempt(ip, success):
 
 # ----- Routes -----
 
-# Get approved products
 @app.route("/api/products", methods=["GET"])
 def get_products():
     conn = get_db_connection()
-    c = conn.cursor(cursor_factory=RealDictCursor)
-    c.execute("SELECT id, name, product, price, condition, room, year, description, image, email FROM products WHERE status='approved'")
-    rows = c.fetchall()
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, name, product, price, condition, room, year, description, image, email FROM products WHERE status='approved'")
+        products = cur.fetchall()
     conn.close()
-    
-    # Convert RealDictRow to regular dict
-    products = [dict(row) for row in rows]
     return jsonify(products)
 
-# Submit a new product
 @app.route("/api/submit", methods=["POST"])
 def submit_product():
     data = request.get_json()
@@ -116,16 +109,15 @@ def submit_product():
         return jsonify({"error": "Invalid phone number"}), 400
 
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO products (name, phone, email, product, price, condition, room, year, description, image, status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
-    """, (name, phone, email, product, price, condition, room, year, description, image_url))
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO products (name, phone, email, product, price, condition, room, year, description, image, status)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+        """, (name, phone, email, product, price, condition, room, year, description, image_url))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
 
-# User removes their own ad
 @app.route("/api/remove", methods=["POST"])
 def remove_ad():
     data = request.get_json()
@@ -135,15 +127,14 @@ def remove_ad():
         return jsonify({"error": "Missing id or email"}), 400
 
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id=%s AND email=%s", (product_id, email))
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM products WHERE id=%s AND email=%s", (product_id, email))
+        deleted = cur.rowcount
     conn.commit()
-    deleted = c.rowcount
     conn.close()
     if deleted:
         return jsonify({"success": True})
-    else:
-        return jsonify({"error": "No matching ad found"}), 404
+    return jsonify({"error": "No matching ad found"}), 404
 
 # ----- Admin Routes -----
 @app.route("/api/admin/login", methods=["POST"])
@@ -166,20 +157,17 @@ def admin_login():
 @app.route("/api/admin/products", methods=["GET"])
 def admin_products():
     conn = get_db_connection()
-    c = conn.cursor(cursor_factory=RealDictCursor)
-    c.execute("SELECT id, name, product, price, condition, room, year, description, image, status FROM products")
-    rows = c.fetchall()
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, name, product, price, condition, room, year, description, image, status FROM products")
+        products = cur.fetchall()
     conn.close()
-    
-    # Convert RealDictRow to regular dict
-    products = [dict(row) for row in rows]
     return jsonify(products)
 
 @app.route("/api/admin/approve/<int:pid>", methods=["POST"])
 def approve_product(pid):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE products SET status='approved' WHERE id=%s", (pid,))
+    with conn.cursor() as cur:
+        cur.execute("UPDATE products SET status='approved' WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -187,8 +175,8 @@ def approve_product(pid):
 @app.route("/api/admin/reject/<int:pid>", methods=["POST"])
 def reject_product(pid):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE products SET status='rejected' WHERE id=%s", (pid,))
+    with conn.cursor() as cur:
+        cur.execute("UPDATE products SET status='rejected' WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -196,8 +184,8 @@ def reject_product(pid):
 @app.route("/api/admin/delete/<int:pid>", methods=["DELETE"])
 def delete_product(pid):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id=%s", (pid,))
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM products WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
