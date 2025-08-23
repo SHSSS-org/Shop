@@ -1,14 +1,12 @@
 import os
-import sqlite3
 import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime, timedelta
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # ----- Config -----
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(APP_DIR, "marketplace.db")
-
 app = Flask(__name__)
 CORS(app)
 
@@ -18,13 +16,32 @@ MAX_ATTEMPTS = 5
 FAILED_ATTEMPTS = {}
 BLOCKED_USERS = {}
 
+# Database connection details from your file
+DB_HOST = "dpg-d2kguqndiees73c6jh90-a"  # Using the hostname you specified
+DB_PORT = 5432
+DB_NAME = "database_azk8"
+DB_USER = "database_azk8_user"
+DB_PASSWORD = "8:ULBKnews1DwMizp8c871HH13spEC4yn"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# ----- DB Connection -----
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT
+    )
+    return conn
+
 # ----- DB Setup -----
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT,
             phone TEXT,
             email TEXT,
@@ -67,25 +84,14 @@ def record_attempt(ip, success):
 # Get approved products
 @app.route("/api/products", methods=["GET"])
 def get_products():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn = get_db_connection()
+    c = conn.cursor(cursor_factory=RealDictCursor)
     c.execute("SELECT id, name, product, price, condition, room, year, description, image, email FROM products WHERE status='approved'")
     rows = c.fetchall()
     conn.close()
-    products = [
-        {
-            "id": r[0],
-            "name": r[1],
-            "product": r[2],
-            "price": r[3],
-            "condition": r[4],
-            "room": r[5],
-            "year": r[6],
-            "description": r[7],
-            "image": r[8],
-            "email": r[9]
-        } for r in rows
-    ]
+    
+    # Convert RealDictRow to regular dict
+    products = [dict(row) for row in rows]
     return jsonify(products)
 
 # Submit a new product
@@ -109,11 +115,11 @@ def submit_product():
     if not validate_phone(phone):
         return jsonify({"error": "Invalid phone number"}), 400
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         INSERT INTO products (name, phone, email, product, price, condition, room, year, description, image, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
     """, (name, phone, email, product, price, condition, room, year, description, image_url))
     conn.commit()
     conn.close()
@@ -128,9 +134,9 @@ def remove_ad():
     if not product_id or not email:
         return jsonify({"error": "Missing id or email"}), 400
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id=? AND email=?", (product_id, email))
+    c.execute("DELETE FROM products WHERE id=%s AND email=%s", (product_id, email))
     conn.commit()
     deleted = c.rowcount
     conn.close()
@@ -159,50 +165,39 @@ def admin_login():
 
 @app.route("/api/admin/products", methods=["GET"])
 def admin_products():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn = get_db_connection()
+    c = conn.cursor(cursor_factory=RealDictCursor)
     c.execute("SELECT id, name, product, price, condition, room, year, description, image, status FROM products")
     rows = c.fetchall()
     conn.close()
-    products = [
-        {
-            "id": r[0],
-            "name": r[1],
-            "product": r[2],
-            "price": r[3],
-            "condition": r[4],
-            "room": r[5],
-            "year": r[6],
-            "description": r[7],
-            "image": r[8],
-            "status": r[9]
-        } for r in rows
-    ]
+    
+    # Convert RealDictRow to regular dict
+    products = [dict(row) for row in rows]
     return jsonify(products)
 
 @app.route("/api/admin/approve/<int:pid>", methods=["POST"])
 def approve_product(pid):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("UPDATE products SET status='approved' WHERE id=?", (pid,))
+    c.execute("UPDATE products SET status='approved' WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
 
 @app.route("/api/admin/reject/<int:pid>", methods=["POST"])
 def reject_product(pid):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("UPDATE products SET status='rejected' WHERE id=?", (pid,))
+    c.execute("UPDATE products SET status='rejected' WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
 
 @app.route("/api/admin/delete/<int:pid>", methods=["DELETE"])
 def delete_product(pid):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM products WHERE id=?", (pid,))
+    c.execute("DELETE FROM products WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
