@@ -1,205 +1,1106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHSSS Marketplace</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:0; background:#f0f2f5; color:#333; }
-    header { background:#0066ff; color:#fff; padding:1.2rem; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
-    h1 { margin:0; font-size:2rem; letter-spacing:1px; }
-    nav { text-align:center; margin:1.5rem 0; }
-    nav button { margin:0 6px; padding:0.6rem 1.2rem; border:none; border-radius:6px; cursor:pointer; background:#007bff; color:#fff; font-weight:600; transition:0.3s; }
-    nav button:hover { background:#0056b3; }
-    .container { max-width:950px; margin:1rem auto 2rem auto; background:#fff; padding:1.5rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
-    .product { border:1px solid #ddd; border-radius:8px; padding:1rem; margin:1rem 0; display:flex; flex-wrap:wrap; background:#fafafa; align-items:center; gap:1rem; transition:0.3s; }
-    .product:hover { box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-    .product img { max-width:160px; border-radius:8px; flex-shrink:0; }
-    .product-details { flex:1; min-width:200px; }
-    .product-details p { margin:0.3rem 0; }
-    .btn { background:#007bff; color:#fff; padding:0.5rem 1.2rem; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:0.3s; }
-    .btn:hover { background:#0056b3; }
-    input, textarea { width:100%; padding:0.6rem; margin:0.5rem 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
-    textarea { resize:vertical; min-height:80px; }
-    form button { margin-top:0.5rem; }
-    #adminDashboard button { margin:0.2rem; }
-    @media(max-width:600px){
-      .product { flex-direction:column; align-items:flex-start; }
-      .product img { width:100%; max-width:100%; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHSSS Headlines Marketplace | Boarding House Essentials</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #FF385C;
+            --secondary: #222222;
+            --light-gray: #F7F7F7;
+            --medium-gray: #DDDDDD;
+            --dark-gray: #717171;
+            --text: #222222;
+            --white: #FFFFFF;
+            --shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+            --success: #00A699;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--medium-gray);
+            border-radius: 30px;
+            padding: 10px 15px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.2s ease;
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+        }
+
+        .search-bar:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-actions a {
+            text-decoration: none;
+            color: var(--dark-gray);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-actions a:hover {
+            background-color: var(--light-gray);
+        }
+
+        .user-actions .host-btn {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .user-actions .host-btn:hover {
+            background-color: #E31C5F;
+        }
+
+        .cart-icon {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            color: var(--white);
+            padding: 80px 0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto 25px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #E31C5F;
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            scrollbar-width: none;
+        }
+
+        .categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 80px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .category:hover {
+            background-color: var(--white);
+        }
+
+        .category i {
+            font-size: 24px;
+            color: var(--dark-gray);
+        }
+
+        .category.active i {
+            color: var(--primary);
+        }
+
+        .category span {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .category.active span {
+            color: var(--primary);
+        }
+
+        /* Products Grid */
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .product-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: var(--dark-gray);
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-rating i {
+            color: var(--primary);
+        }
+
+        .add-to-cart {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .add-to-cart:hover {
+            background-color: #E31C5F;
+        }
+
+        .add-to-cart.added {
+            background-color: var(--success);
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background-color: var(--white);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            background: var(--light-gray);
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .cart-item-quantity {
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .remove-item {
+            color: var(--dark-gray);
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid var(--medium-gray);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .checkout-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
+
+        .checkout-btn:hover {
+            background-color: #E31C5F;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--dark-gray);
+        }
+
+        .empty-cart i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--medium-gray);
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 40px 0;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-column h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--white);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid #444;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-bar {
+                width: 100%;
+                margin: 10px 0;
+                max-width: 100%;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .cart-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-actions {
+                gap: 10px;
+            }
+
+            .user-actions a {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>SHSSS Marketplace</h1>
-  </header>
-
-  <nav>
-    <button onclick="showSection('market')">Marketplace</button>
-    <button onclick="showSection('submit')">Submit Ad</button>
-    <button onclick="showSection('admin')">Admin</button>
-  </nav>
-
-  <!-- Marketplace -->
-  <div class="container" id="marketSection">
-    <h2>Available Products [Items Take 15 second to load]</h2>
-    <h2>Please email us to take down an ad if it is sold</h2>
-    <div id="products"></div>
-  </div>
-
-  <!-- Submit -->
-  <div class="container" id="submitSection" style="display:none;">
-    <h2>Submit New Product</h2>
-    <h2>Please use  <div class="btn"><a href="https://postimages.org/">Post Image</a> </div>to generate link of your image</h2>
-    <form id="submitForm">
-      <input type="text" id="name" placeholder="Your Name" required>
-      <input type="text" id="phone" placeholder="Phone (10 digits)" pattern="^[0-9]{10}$" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="text" id="productName" placeholder="Product Name" required>
-      <input type="text" id="condition" placeholder="Condition (New, Slightly used...)" required>
-      <input type="text" id="room" placeholder="Room Number" required>
-      <input type="number" id="price" placeholder="Price" required>
-      <input type="text" id="year" placeholder="Year of Buy (optional)">
-      <input type="text" id="image" placeholder="Image URL" required>
-      <textarea id="description" placeholder="Description"></textarea>
-      <button type="submit" class="btn">Submit</button>
-    </form>
-  </div>
-
-  <!-- Admin -->
-  <div class="container" id="adminSection" style="display:none;">
-    <h2>Admin Login</h2>
-    <form id="adminLoginForm">
-      <input type="text" id="adminUser" placeholder="Username" required>
-      <input type="password" id="adminPass" placeholder="Password" required>
-      <button type="submit" class="btn">Login</button>
-    </form>
-    <div id="adminDashboard" style="display:none;">
-      <h3>Pending Ads</h3>
-      <div id="pendingAds"></div>
-      <h3>Approved Ads</h3>
-      <div id="approvedAds"></div>
-    </div>
-  </div>
-
-  <script>
-    const API_BASE = "https://shop-xz10.onrender.com/api";
-
-    function showSection(section){
-      document.getElementById("marketSection").style.display="none";
-      document.getElementById("submitSection").style.display="none";
-      document.getElementById("adminSection").style.display="none";
-      if(section==='market') document.getElementById("marketSection").style.display="block";
-      if(section==='submit') document.getElementById("submitSection").style.display="block";
-      if(section==='admin') document.getElementById("adminSection").style.display="block";
-    }
-
-    async function fetchProducts(){
-      try{
-        const res = await fetch(`${API_BASE}/products`);
-        const products = await res.json();
-        const container = document.getElementById("products");
-        container.innerHTML="";
-        products.forEach(p=>{
-          const div = document.createElement("div");
-          div.className="product";
-          div.innerHTML=`
-            <img src="${p.image}" alt="Product">
-            <div class="product-details">
-              <h3>${p.product} - ₹${p.price}</h3>
-              <p><b>Condition:</b> ${p.condition}</p>
-              <p><b>Room No:</b> ${p.room}</p>
-              <p><b>Seller:</b> ${p.name}</p>
-              <p><b>Year of Buy:</b> ${p.year || "N/A"}</p>
-              <p><b>Email:</b> ${p.email}</p>
-              <p>${p.description}</p>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-container">
+                <div class="logo">
+                    <i class="fas fa-home"></i>
+                    <h1>SHSSS <span>Headlines</span></h1>
+                </div>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search for products...">
+                </div>
+                <div class="user-actions">
+                    <a href="#" class="host-btn">Become a Host</a>
+                    <a href="#" id="cart-toggle" class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">0</span>
+                    </a>
+                    <a href="#"><i class="fas fa-user"></i> Profile</a>
+                </div>
             </div>
-          `;
-          container.appendChild(div);
-        });
-      } catch(e){ console.error("Error fetching products:", e);}
-    }
+        </div>
+    </header>
 
-    document.getElementById("submitForm").addEventListener("submit", async e=>{
-      e.preventDefault();
-      const data = {
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        product: document.getElementById("productName").value,
-        condition: document.getElementById("condition").value,
-        room: document.getElementById("room").value,
-        price: parseFloat(document.getElementById("price").value),
-        year: document.getElementById("year").value,
-        image: document.getElementById("image").value,
-        description: document.getElementById("description").value
-      };
-      try{
-        const res = await fetch(`${API_BASE}/submit`, {
-          method:"POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if(res.ok){ alert("Product submitted for approval!"); e.target.reset(); }
-        else alert("Failed to submit product: " + (result.error || "Unknown error"));
-      } catch(err){ console.error(err); alert("Error submitting product"); }
-    });
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Find Everything for Your Boarding House</h2>
+            <p>Discover essential products to make your boarding house feel like home. Quality items at affordable prices.</p>
+            <a href="#" class="cta-button">Explore Products</a>
+        </div>
+    </section>
 
-    document.getElementById("adminLoginForm").addEventListener("submit", async e=>{
-      e.preventDefault();
-      try{
-        const res = await fetch(`${API_BASE}/admin/login`, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({
-            username: document.getElementById("adminUser").value,
-            password: document.getElementById("adminPass").value
-          })
-        });
-        const result = await res.json();
-        if(res.ok){
-          document.getElementById("adminLoginForm").style.display="none";
-          document.getElementById("adminDashboard").style.display="block";
-          loadAdminAds();
-        } else alert("Invalid login: " + (result.error || ""));
-      } catch(err){ console.error(err); }
-    });
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Categories -->
+        <div class="categories">
+            <div class="category active" data-category="all">
+                <i class="fas fa-th-large"></i>
+                <span>All</span>
+            </div>
+            <div class="category" data-category="bedding">
+                <i class="fas fa-bed"></i>
+                <span>Bedding</span>
+            </div>
+            <div class="category" data-category="kitchen">
+                <i class="fas fa-utensils"></i>
+                <span>Kitchen</span>
+            </div>
+            <div class="category" data-category="furniture">
+                <i class="fas fa-couch"></i>
+                <span>Furniture</span>
+            </div>
+            <div class="category" data-category="bathroom">
+                <i class="fas fa-bath"></i>
+                <span>Bathroom</span>
+            </div>
+            <div class="category" data-category="lighting">
+                <i class="fas fa-lightbulb"></i>
+                <span>Lighting</span>
+            </div>
+            <div class="category" data-category="tools">
+                <i class="fas fa-toolbox"></i>
+                <span>Tools</span>
+            </div>
+            <div class="category" data-category="decor">
+                <i class="fas fa-paint-roller"></i>
+                <span>Decor</span>
+            </div>
+            <div class="category" data-category="electronics">
+                <i class="fas fa-plug"></i>
+                <span>Electronics</span>
+            </div>
+            <div class="category" data-category="storage">
+                <i class="fas fa-box"></i>
+                <span>Storage</span>
+            </div>
+            <div class="category" data-category="cleaning">
+                <i class="fas fa-broom"></i>
+                <span>Cleaning</span>
+            </div>
+        </div>
 
-    async function loadAdminAds(){
-      const res = await fetch(`${API_BASE}/admin/products`);
-      const data = await res.json();
-      const pending = document.getElementById("pendingAds");
-      const approved = document.getElementById("approvedAds");
-      pending.innerHTML = "";
-      approved.innerHTML = "";
+        <!-- Featured Products -->
+        <h2 class="section-title">Featured Products</h2>
+        <div class="products-grid" id="products-container">
+            <!-- Products will be loaded here from JSON -->
+        </div>
 
-      data.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "product";
-        const buttons = [];
-        if(p.status==="pending"){
-          buttons.push(`<button onclick="approveAd(${p.id})" class="btn">Approve</button>`);
-          buttons.push(`<button onclick="rejectAd(${p.id})" class="btn">Reject</button>`);
+        <!-- Popular Products -->
+        <h2 class="section-title">Popular in Your Area</h2>
+        <div class="products-grid" id="popular-products">
+            <!-- Popular products will be loaded here from JSON -->
+        </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button class="close-cart" id="close-cart">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items will be loaded here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            <button class="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Product Returns</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Connect</h3>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Newsletter</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>SHSSS Headlines</h3>
+                    <ul>
+                        <li><a href="#">For Hosts</a></li>
+                        <li><a href="#">Gift Cards</a></li>
+                        <li><a href="#">Business Program</a></li>
+                        <li><a href="#">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 SHSSS Headlines Marketplace. Powered by flovvnetc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample product data (in a real scenario, this would be loaded from product.json)
+        const products = [
+            {
+                id: 1,
+                title: "Comfort Memory Foam Pillow",
+                description: "Ergonomic pillow designed for optimal neck support and comfortable sleep.",
+                price: 29.99,
+                image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.8,
+                category: "bedding",
+                keywords: ["pillow", "memory foam", "bedding", "sleep", "comfort"]
+            },
+            {
+                id: 2,
+                title: "Stainless Steel Cookware Set",
+                description: "10-piece kitchen cookware set with non-stick coating and durable handles.",
+                price: 89.99,
+                image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.6,
+                category: "kitchen",
+                keywords: ["cookware", "kitchen", "stainless steel", "pots", "pans"]
+            },
+            {
+                id: 3,
+                title: "Modern Study Desk",
+                description: "Compact desk with storage drawer, perfect for small spaces.",
+                price: 129.99,
+                image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.9,
+                category: "furniture",
+                keywords: ["desk", "study", "furniture", "wood", "office"]
+            },
+            {
+                id: 4,
+                title: "Bathroom Essentials Set",
+                description: "Complete set including towels, shower curtain, and bath mat.",
+                price: 45.99,
+                image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.5,
+                category: "bathroom",
+                keywords: ["bathroom", "towels", "shower curtain", "bath mat", "essentials"]
+            },
+            {
+                id: 5,
+                title: "LED Desk Lamp",
+                description: "Adjustable lamp with multiple brightness settings and USB port.",
+                price: 24.99,
+                image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.7,
+                category: "lighting",
+                keywords: ["lamp", "LED", "desk", "lighting", "USB"]
+            },
+            {
+                id: 6,
+                title: "Tool Kit for Home Repairs",
+                description: "36-piece tool set with case, perfect for basic home maintenance.",
+                price: 39.99,
+                image: "https://images.unsplash.com/photo-1572981779307-38f8b0456224?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.4,
+                category: "tools",
+                keywords: ["tools", "repair", "home", "maintenance", "kit"]
+            },
+            {
+                id: 7,
+                title: "Wall Art Set",
+                description: "Set of 3 canvas prints to brighten up your living space.",
+                price: 34.99,
+                image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.3,
+                category: "decor",
+                keywords: ["art", "wall", "decor", "canvas", "prints"]
+            },
+            {
+                id: 8,
+                title: "Smart Plug Set",
+                description: "Control your appliances remotely with these Wi-Fi enabled smart plugs.",
+                price: 19.99,
+                image: "https://images.unsplash.com/photo-1558618666-fcd25856cd25?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.6,
+                category: "electronics",
+                keywords: ["smart plug", "electronics", "Wi-Fi", "remote control", "appliances"]
+            },
+            {
+                id: 9,
+                title: "Storage Bins Set",
+                description: "Set of 5 clear plastic storage bins with secure lids.",
+                price: 32.99,
+                image: "https://images.unsplash.com/photo-1586525198428-225f6f12cff5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.5,
+                category: "storage",
+                keywords: ["storage", "bins", "plastic", "organization", "containers"]
+            },
+            {
+                id: 10,
+                title: "Vacuum Cleaner",
+                description: "Lightweight vacuum with HEPA filter for efficient cleaning.",
+                price: 79.99,
+                image: "https://images.unsplash.com/photo-1558618047-76b6caf8ae36?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                rating: 4.7,
+                category: "cleaning",
+                keywords: ["vacuum", "cleaner", "cleaning", "HEPA", "lightweight"]
+            }
+        ];
+
+        // Cart state
+        let cart = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        // DOM Elements
+        const productsContainer = document.getElementById('products-container');
+        const popularProductsContainer = document.getElementById('popular-products');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const cartCountElement = document.querySelector('.cart-count');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const overlay = document.getElementById('overlay');
+        const cartToggle = document.getElementById('cart-toggle');
+        const closeCart = document.getElementById('close-cart');
+        const searchInput = document.getElementById('search-input');
+        const categories = document.querySelectorAll('.category');
+
+        // Function to create product card HTML
+        function createProductCard(product) {
+            const isInCart = cart.some(item => item.id === product.id);
+            
+            return `
+                <div class="product-card" data-category="${product.category}">
+                    <img src="${product.image}" alt="${product.title}" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.title}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-price">₹${product.price.toFixed(2)}</div>
+                        <div class="product-meta">
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <span>${product.rating}</span>
+                            </div>
+                            <div class="product-category">${product.category}</div>
+                        </div>
+                        <button class="add-to-cart ${isInCart ? 'added' : ''}" data-id="${product.id}">
+                            <i class="fas ${isInCart ? 'fa-check' : 'fa-cart-plus'}"></i>
+                            ${isInCart ? 'Added to Cart' : 'Add to Cart'}
+                        </button>
+                    </div>
+                </div>
+            `;
         }
-        buttons.push(`<button onclick="deleteAd(${p.id})" class="btn">Delete</button>`);
-        div.innerHTML = `<h4>${p.product} - ₹${p.price}</h4>${buttons.join(" ")}`;
-        if(p.status==="pending") pending.appendChild(div);
-        else approved.appendChild(div);
-      });
-    }
 
-    async function approveAd(id){ await fetch(`${API_BASE}/admin/approve/${id}`, {method:"POST"}); loadAdminAds(); fetchProducts(); }
-    async function rejectAd(id){ await fetch(`${API_BASE}/admin/reject/${id}`, {method:"POST"}); loadAdminAds(); fetchProducts(); }
-    async function deleteAd(id){ 
-      if(confirm("Are you sure you want to delete this product?")){
-        await fetch(`${API_BASE}/admin/delete/${id}`, {method:"DELETE"});
-        loadAdminAds(); 
-        fetchProducts(); 
-      }
-    }
+        // Function to load products into the container
+        function loadProducts() {
+            let filteredProducts = products;
+            
+            // Filter by category
+            if (currentCategory !== 'all') {
+                filteredProducts = filteredProducts.filter(product => product.category === currentCategory);
+            }
+            
+            // Filter by search query
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filteredProducts = filteredProducts.filter(product => 
+                    product.title.toLowerCase().includes(query) || 
+                    product.description.toLowerCase().includes(query) ||
+                    product.keywords.some(keyword => keyword.toLowerCase().includes(query))
+                );
+            }
+            
+            // Clear existing content
+            productsContainer.innerHTML = '';
+            
+            // Add filtered products
+            if (filteredProducts.length > 0) {
+                filteredProducts.forEach(product => {
+                    productsContainer.innerHTML += createProductCard(product);
+                });
+            } else {
+                productsContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-search" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                        <h3>No products found</h3>
+                        <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                `;
+            }
+            
+            // Add popular products (for demonstration, just show first 4)
+            const popularProducts = products.slice(0, 4);
+            popularProductsContainer.innerHTML = '';
+            popularProducts.forEach(product => {
+                popularProductsContainer.innerHTML += createProductCard(product);
+            });
+            
+            // Add event listeners to the new add to cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    addToCart(productId);
+                });
+            });
+        }
 
-    window.onload = fetchProducts;
-  </script>
+        // Cart functions
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+            
+            updateCart();
+            loadProducts(); // Reload products to update button states
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+            loadProducts(); // Reload products to update button states
+        }
+
+        function updateQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    updateCart();
+                }
+            }
+        }
+
+        function updateCart() {
+            // Update cart count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountElement.textContent = totalItems;
+            
+            // Update cart items
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Your cart is empty</h3>
+                        <p>Add some products to get started</p>
+                    </div>
+                `;
+            } else {
+                cart.forEach(item => {
+                    cartItemsContainer.innerHTML += `
+                        <div class="cart-item">
+                            <img src="${item.image}" alt="${item.title}" class="cart-item-image">
+                            <div class="cart-item-details">
+                                <div class="cart-item-title">${item.title}</div>
+                                <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+                                <div class="cart-item-actions">
+                                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                                    <span class="cart-item-quantity">${item.quantity}</span>
+                                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                                    <button class="remove-item" onclick="removeFromCart(${item.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Update cart total
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotalElement.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Initialize the page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            updateCart();
+            
+            // Category selection
+            categories.forEach(category => {
+                category.addEventListener('click', function() {
+                    // Remove active class from all categories
+                    categories.forEach(cat => cat.classList.remove('active'));
+                    // Add active class to clicked category
+                    this.classList.add('active');
+                    
+                    // Update current category and reload products
+                    currentCategory = this.getAttribute('data-category');
+                    loadProducts();
+                });
+            });
+            
+            // Cart toggle
+            cartToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                cartSidebar.classList.add('active');
+                overlay.classList.add('active');
+            });
+            
+            // Close cart
+            closeCart.addEventListener('click', function() {
+                cartSidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // Close cart when clicking overlay
+            overlay.addEventListener('click', function() {
+                cartSidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                searchQuery = this.value;
+                loadProducts();
+            });
+        });
+
+        // Make functions available globally for onclick handlers
+        window.addToCart = addToCart;
+        window.removeFromCart = removeFromCart;
+        window.updateQuantity = updateQuantity;
+    </script>
 </body>
 </html>
